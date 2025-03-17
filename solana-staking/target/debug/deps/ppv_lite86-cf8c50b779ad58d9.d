@@ -1,0 +1,10 @@
+/Users/davidbonillajaylen2022/DecentraMind/solana-staking/target/debug/deps/libppv_lite86-cf8c50b779ad58d9.rmeta: /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs
+
+/Users/davidbonillajaylen2022/DecentraMind/solana-staking/target/debug/deps/libppv_lite86-cf8c50b779ad58d9.rlib: /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs
+
+/Users/davidbonillajaylen2022/DecentraMind/solana-staking/target/debug/deps/ppv_lite86-cf8c50b779ad58d9.d: /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs /Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs
+
+/Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/lib.rs:
+/Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/soft.rs:
+/Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/types.rs:
+/Users/davidbonillajaylen2022/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ppv-lite86-0.2.21/src/generic.rs:

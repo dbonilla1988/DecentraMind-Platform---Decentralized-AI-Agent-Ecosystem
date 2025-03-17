@@ -1,0 +1,42 @@
+.visual-ai-dashboard {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.image-analysis-section,
+.image-generation-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.analysis-result {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 100px;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #45a049;
+}
