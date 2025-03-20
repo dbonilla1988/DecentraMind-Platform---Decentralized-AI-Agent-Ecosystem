@@ -1,173 +1,111 @@
-import type { ReactElement } from 'react';
 import React, { useState } from 'react';
-import {
-    Box,
-    Card,
-    CardContent,
-    Typography,
-    TextField,
-    Button,
-    Grid,
-    CircularProgress,
-    Avatar,
-    Chip,
-    Paper
-} from '@mui/material';
+import { Container, Box, Typography, TextField, Button, Grid, Card, CardContent, CircularProgress, Chip } from '@mui/material';
 import { huggingFaceService } from '../services/ai/huggingface-service';
 
 interface AgentResponse {
     text: string;
     confidence: number;
-    type: 'analysis' | 'generation' | 'recommendation';
 }
 
-const AIAgents = (): ReactElement => {
-    const [userInput, setUserInput] = useState('');
+const AIAgents = () => {
+    const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
-    const [agentResponses, setAgentResponses] = useState<AgentResponse[]>([]);
+    const [responses, setResponses] = useState<Record<string, AgentResponse>>({
+        research: { text: '', confidence: 0 },
+        creative: { text: '', confidence: 0 },
+        strategy: { text: '', confidence: 0 }
+    });
 
-    const agents = [
-        {
-            name: 'Research Agent',
-            description: 'Analyzes and provides insights on blockchain and AI topics',
-            avatar: '🔍',
-            color: '#4CAF50'
-        },
-        {
-            name: 'Creative Agent',
-            description: 'Generates creative content and visual concepts',
-            avatar: '🎨',
-            color: '#2196F3'
-        },
-        {
-            name: 'Strategy Agent',
-            description: 'Provides strategic recommendations for Web3 projects',
-            avatar: '🎯',
-            color: '#9C27B0'
-        }
-    ];
-
-    const handleAgentQuery = async () => {
+    const handleSubmit = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const responses: AgentResponse[] = [];
+            const researchPrompt = `Analyze this blockchain/AI query: ${query}`;
+            const creativePrompt = `Generate creative solutions for: ${query}`;
+            const strategyPrompt = `Provide strategic recommendations for: ${query}`;
 
-            // Research Agent
-            const researchResponse = await huggingFaceService.generateText(
-                `Analyze this topic from a blockchain and AI perspective: ${userInput}`
-            );
-            responses.push({
-                text: researchResponse,
-                confidence: 0.89,
-                type: 'analysis'
+            const [researchRes, creativeRes, strategyRes] = await Promise.all([
+                huggingFaceService.generateText(researchPrompt),
+                huggingFaceService.generateText(creativePrompt),
+                huggingFaceService.generateText(strategyPrompt)
+            ]);
+
+            setResponses({
+                research: { text: researchRes, confidence: 0.85 },
+                creative: { text: creativeRes, confidence: 0.78 },
+                strategy: { text: strategyRes, confidence: 0.92 }
             });
-
-            // Creative Agent
-            const creativeResponse = await huggingFaceService.generateText(
-                `Generate creative ideas about: ${userInput}`
-            );
-            responses.push({
-                text: creativeResponse,
-                confidence: 0.92,
-                type: 'generation'
-            });
-
-            // Strategy Agent
-            const strategyResponse = await huggingFaceService.generateText(
-                `Provide strategic recommendations for: ${userInput}`
-            );
-            responses.push({
-                text: strategyResponse,
-                confidence: 0.85,
-                type: 'recommendation'
-            });
-
-            setAgentResponses(responses);
         } catch (error) {
-            console.error('Error in agent processing:', error);
+            console.error('Error:', error);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Box sx={{ maxWidth: 1200, margin: 'auto', p: 3 }}>
-            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
-                DecentraMind AI Agents
-            </Typography>
+        <Container maxWidth="lg">
+            <Box sx={{ my: 4 }}>
+                <Typography variant="h3" component="h1" gutterBottom>
+                    AI Agents Interface
+                </Typography>
+                <Typography variant="h6" color="textSecondary" gutterBottom>
+                    Interact with specialized AI agents for blockchain and AI solutions
+                </Typography>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {agents.map((agent) => (
-                    <Grid item xs={12} md={4} key={agent.name}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                    <Avatar sx={{ bgcolor: agent.color, mr: 2 }}>
-                                        {agent.avatar}
-                                    </Avatar>
-                                    <Typography variant="h6">{agent.name}</Typography>
-                                </Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    {agent.description}
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
-
-            <Paper sx={{ p: 3, mb: 4 }}>
-                <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    label="Enter your query for the AI agents"
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                />
-                <Button
-                    variant="contained"
-                    onClick={handleAgentQuery}
-                    disabled={loading || !userInput}
-                    fullWidth
-                >
-                    {loading ? <CircularProgress size={24} /> : 'Consult AI Agents'}
-                </Button>
-            </Paper>
-
-            {agentResponses.length > 0 && (
-                <Box>
-                    <Typography variant="h6" gutterBottom>
-                        Agent Responses
-                    </Typography>
-                    <Grid container spacing={2}>
-                        {agentResponses.map((response, index) => (
-                            <Grid item xs={12} key={index}>
-                                <Card>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                            <Typography variant="subtitle1" color="primary">
-                                                {agents[index].name}
-                                            </Typography>
-                                            <Chip
-                                                label={`Confidence: ${(response.confidence * 100).toFixed(1)}%`}
-                                                color="primary"
-                                                size="small"
-                                            />
-                                        </Box>
-                                        <Typography variant="body1">
-                                            {response.text}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+                <Box sx={{ my: 4 }}>
+                    <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        variant="outlined"
+                        label="Enter your query"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        sx={{ mb: 2 }}
+                    />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSubmit}
+                        disabled={loading || !query.trim()}
+                        size="large"
+                    >
+                        {loading ? <CircularProgress size={24} /> : 'Submit Query'}
+                    </Button>
                 </Box>
-            )}
-        </Box>
+
+                <Grid container spacing={3}>
+                    {Object.entries(responses).map(([agent, response]) => (
+                        <Grid item xs={12} md={4} key={agent}>
+                            <Card>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <Typography variant="h5" component="h2">
+                                            {agent.charAt(0).toUpperCase() + agent.slice(1)} Agent
+                                        </Typography>
+                                        <Chip
+                                            label={`${(response.confidence * 100).toFixed(0)}%`}
+                                            color={response.confidence > 0.8 ? "success" : "warning"}
+                                            size="small"
+                                            sx={{ ml: 2 }}
+                                        />
+                                    </Box>
+                                    <Box sx={{
+                                        bgcolor: 'background.paper',
+                                        p: 2,
+                                        borderRadius: 1,
+                                        minHeight: 150
+                                    }}>
+                                        <Typography>
+                                            {response.text || 'Waiting for query...'}
+                                        </Typography>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
+        </Container>
     );
 };
 
