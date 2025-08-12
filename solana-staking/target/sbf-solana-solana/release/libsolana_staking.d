@@ -1,1 +1,0 @@
-/Users/davidbonillajaylen2022/DecentraMind/solana-staking/target/sbf-solana-solana/release/libsolana_staking.rlib: /Users/davidbonillajaylen2022/DecentraMind/solana-staking/programs/solana-staking/src/lib.rs
