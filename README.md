@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🧠 DecentraMind - ADHD-Friendly AI-Powered Productivity & Wellness Ecosystem
 
 > **"Swiss Army of AI Agents"** - A decentralized platform for AI agent management, productivity tracking, and wellness optimization with Solana blockchain integration.
@@ -340,3 +341,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **🎉 Welcome to DecentraMind - Where AI Meets Human Potential!** 
+=======
+# decentramind-platform-
+Core platform for DecentraMind Labs — AI agent marketplace, governance, staking, and Solana integration. Current stage: pre-MVP.
+>>>>>>> fff8ec5b243d7ed6526a04f7b3285f19f6a3d11a
