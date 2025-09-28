@@ -102,6 +102,10 @@ export class TokenService {
       // Use a very small amount to avoid insufficient balance errors
       const transferAmount = Math.min(amount * 0.000001, 0.001); // Convert to SOL and cap at 0.001 SOL
       
+      if (!wallet.publicKey) {
+        throw new Error('Wallet not connected');
+      }
+      
       const transferInstruction = SystemProgram.transfer({
         fromPubkey: wallet.publicKey,
         toPubkey: recipient,

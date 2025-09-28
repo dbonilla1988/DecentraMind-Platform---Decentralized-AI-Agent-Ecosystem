@@ -201,7 +201,7 @@ const EnhancedStakingTab: React.FC = () => {
       };
 
       // Simulate blockchain transaction with SolanaService
-      const solanaService = new SolanaService();
+      const solanaService = SolanaService;
       const result = await solanaService.stakeTokens(amount);
       
       if (result.success) {
@@ -240,7 +240,7 @@ const EnhancedStakingTab: React.FC = () => {
       showInfo(`Unstaking ${position.amount} DMT...`);
       
       // Simulate unstaking transaction
-      const solanaService = new SolanaService();
+      const solanaService = SolanaService;
       const result = await solanaService.mintAgent(0.001); // Reusing for demo
       
       if (result.success) {

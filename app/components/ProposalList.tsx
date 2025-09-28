@@ -127,16 +127,16 @@ export const ProposalList: React.FC<ProposalListProps> = ({
         case 0: // All
           break;
         case 1: // Active
-          status = 'voting';
+          status = 'active';
           break;
         case 2: // Discussion
-          status = 'discussion';
+          status = 'draft';
           break;
         case 3: // Passed
           status = 'passed';
           break;
         case 4: // Failed
-          status = 'failed';
+          status = 'rejected';
           break;
       }
 
@@ -148,15 +148,14 @@ export const ProposalList: React.FC<ProposalListProps> = ({
         type = typeFilter;
       }
 
-      const proposalsData = await daoService.getProposals(status, type, 20);
+      const proposalsData = daoService.getAllProposals();
       
       // Apply search filter
       let filteredProposals = proposalsData;
       if (searchQuery) {
         filteredProposals = proposalsData.filter(proposal =>
           proposal.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          proposal.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          proposal.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+          proposal.description.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
@@ -203,7 +202,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
 
     setVotingLoading(true);
     try {
-      await daoService.castVote(proposalId, session.walletAddress, session.walletAddress, vote);
+      await daoService.castVote(proposalId, session.walletAddress, vote, { dmt: 1000, dmtx: 50 });
       showSuccess('Vote cast successfully!');
       setShowVoteDialog(false);
       setSelectedProposal(null);
@@ -226,13 +225,8 @@ export const ProposalList: React.FC<ProposalListProps> = ({
 
     setSelectedProposal(proposal);
     
-    // Check if user already voted
-    try {
-      const existingVote = await daoService.getUserVote(proposal.id, session.walletAddress);
-      setUserVote(existingVote?.vote || null);
-    } catch (error) {
-      console.error('Failed to get user vote:', error);
-    }
+    // Check if user already voted (simplified for now)
+    setUserVote(null);
     
     setShowVoteDialog(true);
   };
@@ -240,12 +234,10 @@ export const ProposalList: React.FC<ProposalListProps> = ({
   const getStatusColor = (status: ProposalStatus) => {
     switch (status) {
       case 'draft': return '#9e9e9e';
-      case 'discussion': return '#2196f3';
-      case 'voting': return '#ff9800';
+      case 'active': return '#ff9800';
       case 'passed': return '#4caf50';
-      case 'failed': return '#f44336';
+      case 'rejected': return '#f44336';
       case 'executed': return '#4caf50';
-      case 'cancelled': return '#f44336';
       default: return '#9e9e9e';
     }
   };
@@ -253,31 +245,29 @@ export const ProposalList: React.FC<ProposalListProps> = ({
   const getStatusIcon = (status: ProposalStatus) => {
     switch (status) {
       case 'draft': return <InfoIcon />;
-      case 'discussion': return <ScheduleIcon />;
-      case 'voting': return <TimerIcon />;
+      case 'active': return <TimerIcon />;
       case 'passed': return <CheckIcon />;
-      case 'failed': return <CancelIcon />;
+      case 'rejected': return <CancelIcon />;
       case 'executed': return <CheckIcon />;
-      case 'cancelled': return <CancelIcon />;
       default: return <InfoIcon />;
     }
   };
 
   const getTypeColor = (type: ProposalType) => {
     switch (type) {
-      case 'platformDevelopment': return '#2196f3';
-      case 'economicPolicy': return '#ff9800';
-      case 'treasuryManagement': return '#4caf50';
       case 'governance': return '#9c27b0';
-      case 'emergency': return '#f44336';
+      case 'treasury': return '#4caf50';
+      case 'feature': return '#2196f3';
+      case 'agent': return '#ff9800';
+      case 'upgrade': return '#ff5722';
       default: return '#9e9e9e';
     }
   };
 
   const calculateVoteProgress = (proposal: Proposal) => {
-    const total = proposal.forVotes + proposal.againstVotes + proposal.abstainVotes;
+    const total = proposal.votes.for + proposal.votes.against + proposal.votes.abstain;
     if (total === 0) return 0;
-    return (proposal.forVotes / total) * 100;
+    return (proposal.votes.for / total) * 100;
   };
 
   const formatTimeRemaining = (endTime: string) => {
@@ -517,9 +507,9 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                           fontWeight: 'bold'
                         }}
                       />
-                      {proposal.funding && proposal.funding > 0 && (
+                      {proposal.executionData?.funding && proposal.executionData.funding > 0 && (
                         <Chip
-                          label={`${proposal.funding.toLocaleString()} DMT`}
+                          label={`${proposal.executionData.funding.toLocaleString()} DMT`}
                           size="small"
                           sx={{ background: '#ffc107', color: 'black', fontWeight: 'bold' }}
                         />
@@ -536,7 +526,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                         <ViewIcon />
                       </IconButton>
                     </Tooltip>
-                    {proposal.status === 'voting' && (
+                    {proposal.status === 'active' && (
                       <Tooltip title="Vote">
                         <IconButton
                           onClick={() => openVoteDialog(proposal)}
@@ -550,14 +540,14 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                 </Box>
 
                 {/* Vote Progress */}
-                {proposal.status === 'voting' && (
+                {proposal.status === 'active' && (
                   <Box sx={{ mb: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         Vote Progress
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {formatTimeRemaining(proposal.votingEnd)}
+                        {formatTimeRemaining(proposal.votingEnd.toISOString())}
                       </Typography>
                     </Box>
                     <LinearProgress
@@ -574,13 +564,13 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                     />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                       <Typography variant="caption" color="text.secondary">
-                        For: {proposal.forVotes.toLocaleString()}
+                        For: {proposal.votes.for.toLocaleString()}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Against: {proposal.againstVotes.toLocaleString()}
+                        Against: {proposal.votes.against.toLocaleString()}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Abstain: {proposal.abstainVotes.toLocaleString()}
+                        Abstain: {proposal.votes.abstain.toLocaleString()}
                       </Typography>
                     </Box>
                   </Box>
@@ -589,7 +579,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                 {/* Proposal Stats */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="caption" color="text.secondary">
-                    Created by {proposal.creatorWallet.slice(0, 8)}...{proposal.creatorWallet.slice(-6)}
+                    Created by {proposal.proposer.slice(0, 8)}...{proposal.proposer.slice(-6)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {new Date(proposal.createdAt).toLocaleDateString()}
@@ -647,9 +637,9 @@ export const ProposalList: React.FC<ProposalListProps> = ({
               
               <Typography variant="body2" sx={{ mb: 2 }}>
                 <strong>Current Vote Counts:</strong><br />
-                For: {selectedProposal.forVotes.toLocaleString()}<br />
-                Against: {selectedProposal.againstVotes.toLocaleString()}<br />
-                Abstain: {selectedProposal.abstainVotes.toLocaleString()}
+                For: {selectedProposal.votes.for.toLocaleString()}<br />
+                Against: {selectedProposal.votes.against.toLocaleString()}<br />
+                Abstain: {selectedProposal.votes.abstain.toLocaleString()}
               </Typography>
 
               {userVote && (

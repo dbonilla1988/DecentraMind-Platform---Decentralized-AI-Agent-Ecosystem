@@ -118,7 +118,7 @@ const StakingTab: React.FC = () => {
       const walletService = SolanaWalletService.getInstance();
       
       // REAL BLOCKCHAIN TRANSACTION - Stake tokens on Solana
-      const solanaService = SolanaService.getInstance();
+      const solanaService = SolanaService;
       const blockchainResult = await solanaService.stakeTokens(amount);
       
       if (!blockchainResult.success) {

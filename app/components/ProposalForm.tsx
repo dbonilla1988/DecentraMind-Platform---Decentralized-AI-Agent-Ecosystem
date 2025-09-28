@@ -132,7 +132,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({
     try {
       const [balance, votingPower] = await Promise.all([
         tokenomicsService.getDmtBalance(session.walletAddress),
-        daoService.calculateVotingPower(session.walletAddress)
+        daoService.calculateVotingWeight(session.walletAddress)
       ]);
 
       setUserBalance(balance);
@@ -211,18 +211,23 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({
     setError(null);
 
     try {
-      const proposalId = await daoService.createProposal(
-        session.walletAddress,
+      const result = await daoService.createProposal(
         session.walletAddress,
         formData.title,
         formData.description,
         formData.type,
-        formData.funding > 0 ? formData.funding : undefined,
-        formData.tags
+        {
+          funding: formData.funding > 0 ? formData.funding : undefined,
+          tags: formData.tags
+        }
       );
 
-      showSuccess('Proposal created successfully!');
-      onProposalCreated?.(proposalId);
+      if (result.success && result.proposalId) {
+        showSuccess('Proposal created successfully!');
+        onProposalCreated?.(result.proposalId);
+      } else {
+        throw new Error(result.error || 'Failed to create proposal');
+      }
     } catch (error) {
       console.error('Failed to create proposal:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create proposal';

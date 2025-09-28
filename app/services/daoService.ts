@@ -1,746 +1,382 @@
-// DAO Service for DecentraMind Governance
-import { 
-  Connection, 
-  PublicKey, 
-  Transaction, 
-  SystemProgram,
-  LAMPORTS_PER_SOL
-} from '@solana/web3.js';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  getDoc, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
-  onSnapshot, 
-  setDoc, 
-  serverTimestamp,
-  increment,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { tokenomicsService } from './tokenomicsService';
+// DAO Governance Service
+export type ProposalType = 'governance' | 'treasury' | 'feature' | 'agent' | 'upgrade';
+export type ProposalStatus = 'draft' | 'active' | 'passed' | 'rejected' | 'executed';
 
-// DAO Configuration
 export const DAO_CONFIG = {
-  // Governance Token
-  governanceToken: 'DMT',
-  minVotingPower: 100, // Minimum DMT required to vote
-  stakingBonus: 0.5, // 50% bonus for staked DMT
-  
-  // Proposal Requirements
   minProposalCreatorDMT: 1000,
-  minEndorsements: 50,
-  discussionPeriod: 3 * 24 * 60 * 60 * 1000, // 3 days
-  timelockPeriod: 7 * 24 * 60 * 60 * 1000, // 7 days
-  
-  // Voting Periods (in days)
-  votingPeriods: {
-    platformDevelopment: 7,
-    economicPolicy: 14,
-    treasuryManagement: 10,
-    governance: 21,
-    emergency: 3
-  },
-  
-  // Quorum Requirements (% of circulating DMT)
-  quorumRequirements: {
-    platformDevelopment: 0.05, // 5%
-    economicPolicy: 0.10, // 10%
-    treasuryManagement: 0.07, // 7%
-    governance: 0.15, // 15%
-    emergency: 0.03 // 3%
-  },
-  
-  // Majority Requirements
-  majorityRequirements: {
-    standard: 0.50, // 50% + 1
-    constitution: 0.66, // 66% + 1
-    emergency: 0.75 // 75% + 1
-  },
-  
-  // Treasury Configuration
-  treasury: {
-    multiSigThreshold: 3, // 3/5 guardians required
-    maxGuardianSpending: 10000,
-    maxCouncilSpending: 50000,
-    maxEmergencySpending: 25000,
-    timelockLargeTx: 7 * 24 * 60 * 60 * 1000 // 7 days for >100k DMT
-  }
+  minVotingPower: 100,
+  proposalFee: 50,
+  votingPeriod: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+  executionPeriod: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+  quorumThreshold: 0.1, // 10%
+  supermajorityThreshold: 0.67, // 67%
 };
 
-// DAO Interfaces
 export interface Proposal {
   id: string;
-  creator: string;
-  creatorWallet: string;
   title: string;
   description: string;
-  type: ProposalType;
-  funding?: number;
-  status: ProposalStatus;
-  createdAt: string;
-  discussionEnd: string;
-  votingStart: string;
-  votingEnd: string;
-  executedAt?: string;
-  quorum: number;
-  majority: number;
-  forVotes: number;
-  againstVotes: number;
-  abstainVotes: number;
+  type: 'governance' | 'treasury' | 'feature' | 'agent' | 'upgrade';
+  status: 'draft' | 'active' | 'passed' | 'rejected' | 'executed';
+  proposer: string;
+  createdAt: Date;
+  votingStart: Date;
+  votingEnd: Date;
+  executionDeadline?: Date;
+  votes: {
+    for: number;
+    against: number;
+    abstain: number;
+  };
   totalVotes: number;
-  endorsements: string[];
-  tags: string[];
-  attachments?: string[];
-  ipfsHash?: string;
+  quorum: number;
+  requiredQuorum: number;
+  executionData?: any;
+  executionTxHash?: string;
 }
-
-export type ProposalType = 
-  | 'platformDevelopment'
-  | 'economicPolicy'
-  | 'treasuryManagement'
-  | 'governance'
-  | 'emergency';
-
-export type ProposalStatus = 
-  | 'draft'
-  | 'discussion'
-  | 'voting'
-  | 'passed'
-  | 'failed'
-  | 'executed'
-  | 'cancelled';
 
 export interface Vote {
   id: string;
   proposalId: string;
   voter: string;
-  voterWallet: string;
-  vote: 'for' | 'against' | 'abstain';
-  votingPower: number;
-  timestamp: string;
-  transactionHash?: string;
+  choice: 'for' | 'against' | 'abstain';
+  weight: number;
+  timestamp: Date;
+  txHash?: string;
 }
 
-export interface TreasuryTransaction {
-  id: string;
-  type: 'spending' | 'receiving' | 'investment' | 'emergency';
-  amount: number;
-  currency: 'DMT' | 'SOL';
-  recipient: string;
-  description: string;
-  approvedBy: string[];
-  timestamp: string;
-  transactionHash?: string;
-  status: 'pending' | 'approved' | 'executed' | 'rejected';
-}
-
-export interface GovernanceMetrics {
+export interface GovernanceStats {
   totalProposals: number;
   activeProposals: number;
+  passedProposals: number;
   totalVotes: number;
-  activeVoters: number;
+  participationRate: number;
   treasuryBalance: number;
-  averageParticipation: number;
-  proposalSuccessRate: number;
-  averageVotingPower: number;
+  activeVoters: number;
 }
 
-export interface CouncilMember {
-  id: string;
-  wallet: string;
-  name: string;
-  role: 'guardian' | 'council' | 'member';
-  dmtBalance: number;
-  stakedAmount: number;
-  votingPower: number;
-  joinedAt: string;
-  activeProposals: number;
-  successfulProposals: number;
-}
-
-class DAOService {
-  private static instance: DAOService;
-  private connection: Connection;
+export class DaoService {
   private proposals: Map<string, Proposal> = new Map();
   private votes: Map<string, Vote[]> = new Map();
-  private treasuryTransactions: Map<string, TreasuryTransaction> = new Map();
+  private userVotes: Map<string, Set<string>> = new Map(); // userId -> Set of proposalIds
 
-  static getInstance(): DAOService {
-    if (!DAOService.instance) {
-      DAOService.instance = new DAOService();
-    }
-    return DAOService.instance;
+  // Minimum requirements for proposal creation
+  private readonly PROPOSAL_REQUIREMENTS = {
+    MIN_DMT: 1000,
+    MIN_DMTX: 10,
+    MIN_STAKED_DMT: 500
+  };
+
+  // Minimum requirements for voting
+  private readonly VOTING_REQUIREMENTS = {
+    MIN_DMT: 100,
+    MIN_DMTX: 1,
+    MIN_STAKED_DMT: 50
+  };
+
+  // Check if user can create proposals
+  async canCreateProposal(userId: string, userTier: any, tokenBalance: any): Promise<{
+    canCreate: boolean;
+    reason?: string;
+    requirements: {
+      dmt: { required: number; current: number; met: boolean };
+      dmtx: { required: number; current: number; met: boolean };
+      stakedDmt: { required: number; current: number; met: boolean };
+    };
+  }> {
+    const dmtMet = tokenBalance.dmt >= this.PROPOSAL_REQUIREMENTS.MIN_DMT;
+    const dmtxMet = tokenBalance.dmtx >= this.PROPOSAL_REQUIREMENTS.MIN_DMTX;
+    const stakedMet = tokenBalance.dmtStaked >= this.PROPOSAL_REQUIREMENTS.MIN_STAKED_DMT;
+    const tierMet = userTier.benefits.proposalRights;
+
+    const canCreate = (dmtMet || dmtxMet || stakedMet) && tierMet;
+
+    return {
+      canCreate,
+      reason: canCreate ? undefined : 'Insufficient tokens or tier requirements not met',
+      requirements: {
+        dmt: {
+          required: this.PROPOSAL_REQUIREMENTS.MIN_DMT,
+          current: tokenBalance.dmt,
+          met: dmtMet
+        },
+        dmtx: {
+          required: this.PROPOSAL_REQUIREMENTS.MIN_DMTX,
+          current: tokenBalance.dmtx,
+          met: dmtxMet
+        },
+        stakedDmt: {
+          required: this.PROPOSAL_REQUIREMENTS.MIN_STAKED_DMT,
+          current: tokenBalance.dmtStaked,
+          met: stakedMet
+        }
+      }
+    };
   }
 
-  constructor() {
-    this.connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com');
+  // Check if user can vote
+  async canVote(userId: string, userTier: any, tokenBalance: any): Promise<{
+    canVote: boolean;
+    reason?: string;
+    requirements: {
+      dmt: { required: number; current: number; met: boolean };
+      dmtx: { required: number; current: number; met: boolean };
+      stakedDmt: { required: number; current: number; met: boolean };
+    };
+  }> {
+    const dmtMet = tokenBalance.dmt >= this.VOTING_REQUIREMENTS.MIN_DMT;
+    const dmtxMet = tokenBalance.dmtx >= this.VOTING_REQUIREMENTS.MIN_DMTX;
+    const stakedMet = tokenBalance.dmtStaked >= this.VOTING_REQUIREMENTS.MIN_STAKED_DMT;
+    const tierMet = userTier.benefits.daoVotingRights;
+
+    const canVote = (dmtMet || dmtxMet || stakedMet) && tierMet;
+
+    return {
+      canVote,
+      reason: canVote ? undefined : 'Insufficient tokens or tier requirements not met',
+      requirements: {
+        dmt: {
+          required: this.VOTING_REQUIREMENTS.MIN_DMT,
+          current: tokenBalance.dmt,
+          met: dmtMet
+        },
+        dmtx: {
+          required: this.VOTING_REQUIREMENTS.MIN_DMTX,
+          current: tokenBalance.dmtx,
+          met: dmtxMet
+        },
+        stakedDmt: {
+          required: this.VOTING_REQUIREMENTS.MIN_STAKED_DMT,
+          current: tokenBalance.dmtStaked,
+          met: stakedMet
+        }
+      }
+    };
   }
 
-  // Proposal Management
+  // Calculate voting weight
+  calculateVotingWeight(tokenBalance: any): number {
+    const dmtWeight = tokenBalance.dmt * 1;
+    const dmtxWeight = tokenBalance.dmtx * 10; // DMTX has 10x voting power
+    const stakedWeight = tokenBalance.dmtStaked * 2; // Staked DMT has 2x voting power
+    
+    return dmtWeight + dmtxWeight + stakedWeight;
+  }
+
+  // Create a new proposal
   async createProposal(
-    creator: string,
-    creatorWallet: string,
+    proposerId: string,
     title: string,
     description: string,
-    type: ProposalType,
-    funding?: number,
-    tags: string[] = []
-  ): Promise<string> {
-    try {
-      console.log(`Creating proposal: ${title} by ${creatorWallet}`);
-
-      // Validate creator requirements
-      const creatorBalance = await tokenomicsService.getDmtBalance(creatorWallet);
-      if (creatorBalance < DAO_CONFIG.minProposalCreatorDMT) {
-        throw new Error(`Insufficient DMT balance. Required: ${DAO_CONFIG.minProposalCreatorDMT}, Current: ${creatorBalance}`);
-      }
-
-      // Calculate voting timeline
-      const now = new Date();
-      const discussionEnd = new Date(now.getTime() + DAO_CONFIG.discussionPeriod);
-      const votingStart = discussionEnd;
-      const votingEnd = new Date(votingStart.getTime() + (DAO_CONFIG.votingPeriods[type] * 24 * 60 * 60 * 1000));
-
-      // Calculate quorum and majority requirements
-      const quorum = await this.calculateQuorum(type);
-      const majority = type === 'governance' ? DAO_CONFIG.majorityRequirements.constitution : 
-                      type === 'emergency' ? DAO_CONFIG.majorityRequirements.emergency : 
-                      DAO_CONFIG.majorityRequirements.standard;
-
-      const proposal: Omit<Proposal, 'id'> = {
-        creator,
-        creatorWallet,
+    type: Proposal['type'],
+    executionData?: any
+  ): Promise<{
+    success: boolean;
+    proposalId?: string;
+    error?: string;
+  }> {
+    const proposalId = `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const proposal: Proposal = {
+      id: proposalId,
         title,
         description,
         type,
-        funding,
         status: 'draft',
-        createdAt: now.toISOString(),
-        discussionEnd: discussionEnd.toISOString(),
-        votingStart: votingStart.toISOString(),
-        votingEnd: votingEnd.toISOString(),
-        quorum,
-        majority,
-        forVotes: 0,
-        againstVotes: 0,
-        abstainVotes: 0,
+      proposer: proposerId,
+      createdAt: new Date(),
+      votingStart: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+      votingEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      executionDeadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+      votes: { for: 0, against: 0, abstain: 0 },
         totalVotes: 0,
-        endorsements: [],
-        tags,
-        ipfsHash: `ipfs_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      };
+      quorum: 0,
+      requiredQuorum: 1000, // Minimum voting power required
+      executionData
+    };
 
-      // Save to Firestore
-      const docRef = await addDoc(collection(db, 'dao_proposals'), proposal);
-      const proposalId = docRef.id;
-
-      // Update local cache
-      this.proposals.set(proposalId, { ...proposal, id: proposalId });
-
-      console.log(`Proposal created successfully: ${proposalId}`);
-      return proposalId;
-    } catch (error) {
-      console.error('Failed to create proposal:', error);
-      throw error;
-    }
-  }
-
-  async getProposal(proposalId: string): Promise<Proposal | null> {
-    try {
-      // Check cache first
-      if (this.proposals.has(proposalId)) {
-        return this.proposals.get(proposalId)!;
-      }
-
-      // Fetch from Firestore
-      const docRef = doc(db, 'dao_proposals', proposalId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const proposal = { id: proposalId, ...docSnap.data() } as Proposal;
         this.proposals.set(proposalId, proposal);
-        return proposal;
-      }
+    this.votes.set(proposalId, []);
 
-      return null;
-    } catch (error) {
-      console.error('Failed to get proposal:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      proposalId
+    };
   }
 
-  async getProposals(
-    status?: ProposalStatus,
-    type?: ProposalType,
-    limit: number = 50
-  ): Promise<Proposal[]> {
-    try {
-      let q = collection(db, 'dao_proposals');
-      
-      if (status) {
-        q = query(q, where('status', '==', status));
-      }
-      
-      if (type) {
-        q = query(q, where('type', '==', type));
-      }
-      
-      q = query(q, orderBy('createdAt', 'desc'), limit(limit));
-      
-      const querySnapshot = await getDocs(q);
-      const proposals: Proposal[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const proposal = { id: doc.id, ...doc.data() } as Proposal;
-        proposals.push(proposal);
-        this.proposals.set(doc.id, proposal);
-      });
-
-      return proposals;
-    } catch (error) {
-      console.error('Failed to get proposals:', error);
-      throw error;
-    }
-  }
-
-  async updateProposal(proposalId: string, updates: Partial<Proposal>): Promise<boolean> {
-    try {
-      const docRef = doc(db, 'dao_proposals', proposalId);
-      await updateDoc(docRef, {
-        ...updates,
-        lastUpdated: serverTimestamp()
-      });
-
-      // Update cache
-      const cached = this.proposals.get(proposalId);
-      if (cached) {
-        this.proposals.set(proposalId, { ...cached, ...updates });
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Failed to update proposal:', error);
-      throw error;
-    }
-  }
-
-  async endorseProposal(proposalId: string, endorser: string): Promise<boolean> {
-    try {
-      const proposal = await this.getProposal(proposalId);
-      if (!proposal) {
-        throw new Error('Proposal not found');
+  // Activate a proposal (move from draft to active)
+  async activateProposal(proposalId: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    const proposal = this.proposals.get(proposalId);
+    if (!proposal) {
+      return { success: false, error: 'Proposal not found' };
       }
 
       if (proposal.status !== 'draft') {
-        throw new Error('Can only endorse draft proposals');
-      }
-
-      if (proposal.endorsements.includes(endorser)) {
-        throw new Error('Already endorsed this proposal');
-      }
-
-      const updatedEndorsements = [...proposal.endorsements, endorser];
-      await this.updateProposal(proposalId, { endorsements: updatedEndorsements });
-
-      // Check if proposal meets endorsement requirements
-      if (updatedEndorsements.length >= DAO_CONFIG.minEndorsements) {
-        await this.updateProposal(proposalId, { status: 'discussion' });
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Failed to endorse proposal:', error);
-      throw error;
+      return { success: false, error: 'Proposal is not in draft status' };
     }
+
+    proposal.status = 'active';
+    this.proposals.set(proposalId, proposal);
+
+    return { success: true };
   }
 
-  // Voting System
+  // Cast a vote
   async castVote(
     proposalId: string,
-    voter: string,
-    voterWallet: string,
-    vote: 'for' | 'against' | 'abstain'
-  ): Promise<string> {
-    try {
-      console.log(`Casting vote: ${vote} on proposal ${proposalId} by ${voterWallet}`);
-
-      const proposal = await this.getProposal(proposalId);
+    voterId: string,
+    choice: 'for' | 'against' | 'abstain',
+    tokenBalance: any
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    voteWeight?: number;
+  }> {
+    const proposal = this.proposals.get(proposalId);
       if (!proposal) {
-        throw new Error('Proposal not found');
+      return { success: false, error: 'Proposal not found' };
       }
 
-      if (proposal.status !== 'voting') {
-        throw new Error('Proposal is not in voting phase');
+    if (proposal.status !== 'active') {
+      return { success: false, error: 'Proposal is not active for voting' };
       }
 
       const now = new Date();
-      if (now < new Date(proposal.votingStart) || now > new Date(proposal.votingEnd)) {
-        throw new Error('Voting period is not active');
+    if (now < proposal.votingStart || now > proposal.votingEnd) {
+      return { success: false, error: 'Voting period is not active' };
       }
 
       // Check if user already voted
-      const existingVote = await this.getUserVote(proposalId, voterWallet);
-      if (existingVote) {
-        throw new Error('User has already voted on this proposal');
-      }
+    const userVotes = this.userVotes.get(voterId) || new Set();
+    if (userVotes.has(proposalId)) {
+      return { success: false, error: 'User has already voted on this proposal' };
+    }
 
-      // Calculate voting power
-      const votingPower = await this.calculateVotingPower(voterWallet);
-      if (votingPower < DAO_CONFIG.minVotingPower) {
-        throw new Error(`Insufficient voting power. Required: ${DAO_CONFIG.minVotingPower}, Current: ${votingPower}`);
-      }
+    const voteWeight = this.calculateVotingWeight(tokenBalance);
+    if (voteWeight === 0) {
+      return { success: false, error: 'Insufficient voting power' };
+    }
 
-      // Create vote record
-      const voteRecord: Omit<Vote, 'id'> = {
+    const vote: Vote = {
+      id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         proposalId,
-        voter,
-        voterWallet,
-        vote,
-        votingPower,
-        timestamp: now.toISOString(),
-        transactionHash: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      };
+      voter: voterId,
+      choice,
+      weight: voteWeight,
+      timestamp: new Date()
+    };
 
-      // Save to Firestore
-      const docRef = await addDoc(collection(db, 'dao_votes'), voteRecord);
-      const voteId = docRef.id;
+    // Record vote
+    const proposalVotes = this.votes.get(proposalId) || [];
+    proposalVotes.push(vote);
+    this.votes.set(proposalId, proposalVotes);
+
+    // Update user votes
+    userVotes.add(proposalId);
+    this.userVotes.set(voterId, userVotes);
 
       // Update proposal vote counts
-      const voteCounts = await this.calculateVoteCounts(proposalId);
-      await this.updateProposal(proposalId, voteCounts);
+    proposal.votes[choice] += voteWeight;
+    proposal.totalVotes += voteWeight;
+    proposal.quorum = proposal.totalVotes;
 
-      // Check if proposal should be executed
-      await this.checkProposalExecution(proposalId);
+    this.proposals.set(proposalId, proposal);
 
-      console.log(`Vote cast successfully: ${voteId}`);
-      return voteId;
-    } catch (error) {
-      console.error('Failed to cast vote:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      voteWeight
+    };
   }
 
-  async getUserVote(proposalId: string, voterWallet: string): Promise<Vote | null> {
-    try {
-      const q = query(
-        collection(db, 'dao_votes'),
-        where('proposalId', '==', proposalId),
-        where('voterWallet', '==', voterWallet)
-      );
-
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        return { id: doc.id, ...doc.data() } as Vote;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Failed to get user vote:', error);
-      throw error;
-    }
+  // Get all proposals
+  getAllProposals(): Proposal[] {
+    return Array.from(this.proposals.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  async getProposalVotes(proposalId: string): Promise<Vote[]> {
-    try {
-      const q = query(
-        collection(db, 'dao_votes'),
-        where('proposalId', '==', proposalId),
-        orderBy('timestamp', 'desc')
-      );
-
-      const querySnapshot = await getDocs(q);
-      const votes: Vote[] = [];
-
-      querySnapshot.forEach((doc) => {
-        votes.push({ id: doc.id, ...doc.data() } as Vote);
-      });
-
-      return votes;
-    } catch (error) {
-      console.error('Failed to get proposal votes:', error);
-      throw error;
-    }
+  // Get active proposals
+  getActiveProposals(): Proposal[] {
+    return this.getAllProposals().filter(p => p.status === 'active');
   }
 
-  // Treasury Management
-  async createTreasuryTransaction(
-    type: TreasuryTransaction['type'],
-    amount: number,
-    currency: 'DMT' | 'SOL',
-    recipient: string,
-    description: string,
-    approver: string
-  ): Promise<string> {
-    try {
-      console.log(`Creating treasury transaction: ${type} ${amount} ${currency} to ${recipient}`);
-
-      const transaction: Omit<TreasuryTransaction, 'id'> = {
-        type,
-        amount,
-        currency,
-        recipient,
-        description,
-        approvedBy: [approver],
-        timestamp: new Date().toISOString(),
-        status: 'pending'
-      };
-
-      // Save to Firestore
-      const docRef = await addDoc(collection(db, 'dao_treasury'), transaction);
-      const transactionId = docRef.id;
-
-      this.treasuryTransactions.set(transactionId, { ...transaction, id: transactionId });
-
-      console.log(`Treasury transaction created: ${transactionId}`);
-      return transactionId;
-    } catch (error) {
-      console.error('Failed to create treasury transaction:', error);
-      throw error;
-    }
+  // Get proposal by ID
+  getProposal(proposalId: string): Proposal | undefined {
+    return this.proposals.get(proposalId);
   }
 
-  async approveTreasuryTransaction(transactionId: string, approver: string): Promise<boolean> {
-    try {
-      const transaction = this.treasuryTransactions.get(transactionId);
-      if (!transaction) {
-        throw new Error('Transaction not found');
-      }
-
-      if (transaction.status !== 'pending') {
-        throw new Error('Transaction is not pending approval');
-      }
-
-      const updatedApprovers = [...transaction.approvedBy, approver];
-      const approvalCount = updatedApprovers.length;
-
-      let newStatus = 'pending';
-      if (approvalCount >= DAO_CONFIG.treasury.multiSigThreshold) {
-        newStatus = 'approved';
-      }
-
-      await updateDoc(doc(db, 'dao_treasury', transactionId), {
-        approvedBy: updatedApprovers,
-        status: newStatus
-      });
-
-      // Update cache
-      this.treasuryTransactions.set(transactionId, {
-        ...transaction,
-        approvedBy: updatedApprovers,
-        status: newStatus
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Failed to approve treasury transaction:', error);
-      throw error;
-    }
+  // Get votes for a proposal
+  getProposalVotes(proposalId: string): Vote[] {
+    return this.votes.get(proposalId) || [];
   }
 
-  async executeTreasuryTransaction(transactionId: string): Promise<boolean> {
-    try {
-      const transaction = this.treasuryTransactions.get(transactionId);
-      if (!transaction) {
-        throw new Error('Transaction not found');
-      }
-
-      if (transaction.status !== 'approved') {
-        throw new Error('Transaction is not approved');
-      }
-
-      // Execute the transaction
-      if (transaction.currency === 'DMT') {
-        await tokenomicsService.transferDmt('treasury_wallet', transaction.recipient, transaction.amount);
-      }
-
-      // Update status
-      await updateDoc(doc(db, 'dao_treasury', transactionId), {
-        status: 'executed',
-        executedAt: new Date().toISOString()
-      });
-
-      this.treasuryTransactions.set(transactionId, {
-        ...transaction,
-        status: 'executed',
-        executedAt: new Date().toISOString()
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Failed to execute treasury transaction:', error);
-      throw error;
+  // Get user's voting history
+  getUserVotingHistory(userId: string): Vote[] {
+    const allVotes: Vote[] = [];
+    for (const votes of this.votes.values()) {
+      allVotes.push(...votes.filter(v => v.voter === userId));
     }
+    return allVotes.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
-  // Utility Methods
-  async calculateVotingPower(walletAddress: string): Promise<number> {
-    try {
-      const balance = await tokenomicsService.getDmtBalance(walletAddress);
-      const stakingInfo = await tokenomicsService.getStakingInfo(walletAddress);
-      
-      const stakedAmount = stakingInfo?.stakedAmount || 0;
-      const stakingBonus = stakedAmount * DAO_CONFIG.stakingBonus;
-      
-      return balance + stakingBonus;
-    } catch (error) {
-      console.error('Failed to calculate voting power:', error);
-      return 0;
-    }
+  // Check if user voted on proposal
+  hasUserVoted(proposalId: string, userId: string): boolean {
+    const userVotes = this.userVotes.get(userId) || new Set();
+    return userVotes.has(proposalId);
   }
 
-  async calculateQuorum(type: ProposalType): Promise<number> {
-    try {
-      // TODO: Get circulating supply from tokenomics service
-      const circulatingSupply = 700_000_000; // 70% of total supply
-      const quorumPercentage = DAO_CONFIG.quorumRequirements[type];
-      return Math.floor(circulatingSupply * quorumPercentage);
-    } catch (error) {
-      console.error('Failed to calculate quorum:', error);
-      return 0;
+  // Get governance statistics
+  getGovernanceStats(): GovernanceStats {
+    const allProposals = this.getAllProposals();
+    const activeProposals = allProposals.filter(p => p.status === 'active').length;
+    const passedProposals = allProposals.filter(p => p.status === 'passed').length;
+    
+    const allVotes: Vote[] = [];
+    for (const votes of this.votes.values()) {
+      allVotes.push(...votes);
     }
-  }
-
-  async calculateVoteCounts(proposalId: string): Promise<Partial<Proposal>> {
-    try {
-      const votes = await this.getProposalVotes(proposalId);
-      
-      let forVotes = 0;
-      let againstVotes = 0;
-      let abstainVotes = 0;
-      let totalVotes = 0;
-
-      votes.forEach(vote => {
-        const power = vote.votingPower;
-        totalVotes += power;
-        
-        switch (vote.vote) {
-          case 'for':
-            forVotes += power;
-            break;
-          case 'against':
-            againstVotes += power;
-            break;
-          case 'abstain':
-            abstainVotes += power;
-            break;
-        }
-      });
-
-      return { forVotes, againstVotes, abstainVotes, totalVotes };
-    } catch (error) {
-      console.error('Failed to calculate vote counts:', error);
-      return {};
-    }
-  }
-
-  async checkProposalExecution(proposalId: string): Promise<void> {
-    try {
-      const proposal = await this.getProposal(proposalId);
-      if (!proposal || proposal.status !== 'voting') return;
-
-      const now = new Date();
-      if (now < new Date(proposal.votingEnd)) return;
-
-      // Check if quorum is met
-      if (proposal.totalVotes < proposal.quorum) {
-        await this.updateProposal(proposalId, { status: 'failed' });
-        return;
-      }
-
-      // Check if majority is met
-      const totalVotes = proposal.forVotes + proposal.againstVotes;
-      const majorityThreshold = totalVotes * proposal.majority;
-
-      if (proposal.forVotes > majorityThreshold) {
-        await this.updateProposal(proposalId, { status: 'passed' });
-      } else {
-        await this.updateProposal(proposalId, { status: 'failed' });
-      }
-    } catch (error) {
-      console.error('Failed to check proposal execution:', error);
-    }
-  }
-
-  async getGovernanceMetrics(): Promise<GovernanceMetrics> {
-    try {
-      const proposals = await this.getProposals();
-      const activeProposals = proposals.filter(p => p.status === 'voting' || p.status === 'discussion');
-      
-      // Calculate metrics
-      const totalProposals = proposals.length;
-      const totalVotes = proposals.reduce((sum, p) => sum + p.totalVotes, 0);
-      const averageParticipation = totalProposals > 0 ? totalVotes / totalProposals : 0;
-      const passedProposals = proposals.filter(p => p.status === 'passed').length;
-      const proposalSuccessRate = totalProposals > 0 ? passedProposals / totalProposals : 0;
+    
+    const uniqueVoters = new Set(allVotes.map(v => v.voter)).size;
+    const totalVotes = allVotes.length;
 
       return {
-        totalProposals,
-        activeProposals: activeProposals.length,
+      totalProposals: allProposals.length,
+      activeProposals,
+      passedProposals,
         totalVotes,
-        activeVoters: 0, // TODO: Calculate unique voters
-        treasuryBalance: 0, // TODO: Get from treasury service
-        averageParticipation,
-        proposalSuccessRate,
-        averageVotingPower: 0 // TODO: Calculate average voting power
-      };
-    } catch (error) {
-      console.error('Failed to get governance metrics:', error);
-      throw error;
+      participationRate: uniqueVoters > 0 ? (totalVotes / uniqueVoters) : 0,
+      treasuryBalance: 1000000, // Mock treasury balance
+      activeVoters: uniqueVoters
+    };
+  }
+
+  // Execute a proposal (mock implementation)
+  async executeProposal(proposalId: string): Promise<{
+    success: boolean;
+    txHash?: string;
+    error?: string;
+  }> {
+    const proposal = this.proposals.get(proposalId);
+    if (!proposal) {
+      return { success: false, error: 'Proposal not found' };
     }
-  }
 
-  // Proposal Lifecycle Management
-  async startDiscussion(proposalId: string): Promise<boolean> {
-    return this.updateProposal(proposalId, { status: 'discussion' });
-  }
-
-  async startVoting(proposalId: string): Promise<boolean> {
-    return this.updateProposal(proposalId, { status: 'voting' });
-  }
-
-  async executeProposal(proposalId: string): Promise<boolean> {
-    try {
-      const proposal = await this.getProposal(proposalId);
-      if (!proposal || proposal.status !== 'passed') {
-        throw new Error('Proposal is not ready for execution');
-      }
-
-      // Execute the proposal based on type
-      switch (proposal.type) {
-        case 'treasuryManagement':
-          if (proposal.funding) {
-            await this.createTreasuryTransaction(
-              'spending',
-              proposal.funding,
-              'DMT',
-              proposal.creatorWallet,
-              proposal.description,
-              'dao_executor'
-            );
-          }
-          break;
-        // Add other proposal type executions
-      }
-
-      return this.updateProposal(proposalId, { 
-        status: 'executed',
-        executedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Failed to execute proposal:', error);
-      throw error;
+    if (proposal.status !== 'passed') {
+      return { success: false, error: 'Proposal has not passed' };
     }
+
+    // Mock execution
+    proposal.status = 'executed';
+    proposal.executionTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
+    this.proposals.set(proposalId, proposal);
+
+    return {
+      success: true,
+      txHash: proposal.executionTxHash
+    };
   }
 }
 
-// Export singleton instance
-export const daoService = DAOService.getInstance(); 
+// Singleton instance
+export const daoService = new DaoService();

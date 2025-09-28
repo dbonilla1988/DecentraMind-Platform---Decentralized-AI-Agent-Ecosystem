@@ -177,7 +177,7 @@ const Marketplace: React.FC = () => {
     setLoading(true);
     try {
       // REAL BLOCKCHAIN TRANSACTION - Buy agent on Solana
-      const solanaService = SolanaService.getInstance();
+      const solanaService = SolanaService;
       const blockchainResult = await solanaService.mintAgent(amount);
       
       if (!blockchainResult.success) {

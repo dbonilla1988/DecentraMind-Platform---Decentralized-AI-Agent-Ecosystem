@@ -161,7 +161,7 @@ const ProposalsTab: React.FC = () => {
       const amount = parseFloat(voteAmount);
       
       // REAL BLOCKCHAIN TRANSACTION - Vote on proposal using Solana
-      const solanaService = SolanaService.getInstance();
+      const solanaService = SolanaService;
       const blockchainResult = await solanaService.mintAgent(amount); // Using mintAgent for voting transaction
       
       if (!blockchainResult.success) {
@@ -199,7 +199,11 @@ const ProposalsTab: React.FC = () => {
           return {
             ...p,
             totalVotes: p.totalVotes + 1,
-            votesFor: p.votesFor + amount
+            votes: {
+              for: amount,
+              against: 0,
+              abstain: 0
+            }
           };
         }
         return p;

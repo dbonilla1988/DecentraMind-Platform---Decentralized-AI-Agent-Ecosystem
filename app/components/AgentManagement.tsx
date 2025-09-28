@@ -1,439 +1,704 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Grid,
   Button,
-  Avatar,
   Chip,
-  LinearProgress,
+  Tabs,
+  Tab,
+  Alert,
+  Snackbar,
+  Fade,
+  Zoom,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider,
-  Alert,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import {
   Psychology as PsychologyIcon,
-  School as SchoolIcon,
-  FitnessCenter as FitnessIcon,
-  Brush as CreativeIcon,
-  Code as TechnicalIcon,
-  Business as BusinessIcon,
-  Chat as ChatIcon,
-  Assignment as TaskIcon,
-  TrendingUp as UpgradeIcon,
+  TrendingUp as TrendingUpIcon,
   Star as StarIcon,
   AutoAwesome as AutoAwesomeIcon,
+  Add as AddIcon,
+  FilterList as FilterIcon,
+  ViewModule as GridIcon,
+  ViewList as ListIcon,
 } from '@mui/icons-material';
+import AgentCard from './AgentCard';
+import AgentUpgradeModal from './AgentUpgradeModal';
+import TaskManagement from './TaskManagement';
+import { AgentUpgradeTier, getAgentTier } from '../utils/agentUpgradeUtils';
+
+interface Agent {
+  id: string;
+  name: string;
+  xp: number;
+  level: number;
+  tasksCompleted: number;
+  usageCount: number;
+  specialization: string;
+  status: 'active' | 'idle' | 'training';
+  lastActive: string;
+  type: 'Master' | 'Sub-Agent';
+  domain: string;
+  personality: string;
+  description: string;
+  avatar: string;
+  specializations: string[];
+  parentAgent?: number;
+  subAgents?: number[];
+}
 
 const AgentManagement: React.FC = () => {
-  const [selectedAgent, setSelectedAgent] = useState<any>(null);
-  const [showChatDialog, setShowChatDialog] = useState(false);
-  const [showTaskDialog, setShowTaskDialog] = useState(false);
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
-  const [taskDescription, setTaskDescription] = useState('');
-  const [upgradeType, setUpgradeType] = useState('');
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' | 'warning' | 'info' });
+  const [userBalance, setUserBalance] = useState({ dmt: 1000, dmtx: 50 });
+  const [showTaskManagement, setShowTaskManagement] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
-  // Mock agents data - in real app this would come from global state
-  const agents = [
+  // Task modal fields state
+  const [assignedAgent, setAssignedAgent] = useState('');
+  const [taskPriority, setTaskPriority] = useState('');
+  const [taskName, setTaskName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+
+  // Enhanced agents data with upgrade system integration
+  const [agents, setAgents] = useState<Agent[]>([
     {
-      id: 1,
+      id: '1',
       name: 'Master Agent',
       type: 'Master',
       domain: 'Orchestration',
       personality: 'Strategic',
       level: 5,
-      xp: 300,
-      status: 'Active',
+      xp: 7500,
+      tasksCompleted: 500,
+      usageCount: 2500,
+      status: 'active',
+      lastActive: '2 minutes ago',
       description: 'Coordinates all sub-agents and manages overall strategy',
       avatar: '/master-agent.png',
+      specialization: 'Leadership',
       specializations: ['Leadership', 'Coordination', 'Strategy'],
       subAgents: [2, 3, 4],
     },
     {
-      id: 2,
+      id: '2',
       name: 'Language Agent',
       type: 'Sub-Agent',
       domain: 'Learning',
       personality: 'Educational',
       level: 2,
-      xp: 75,
-      status: 'Idle',
+      xp: 750,
+      tasksCompleted: 35,
+      usageCount: 150,
+      status: 'idle',
+      lastActive: '1 hour ago',
       description: 'Specializes in language learning and communication',
       avatar: '/sub-agent-1.png',
+      specialization: 'German',
       specializations: ['German', 'Spanish', 'French'],
       parentAgent: 1,
     },
     {
-      id: 3,
+      id: '3',
       name: 'Productivity Agent',
       type: 'Sub-Agent',
       domain: 'Productivity',
       personality: 'Efficient',
       level: 3,
-      xp: 120,
-      status: 'Active',
+      xp: 1800,
+      tasksCompleted: 120,
+      usageCount: 600,
+      status: 'active',
+      lastActive: '5 minutes ago',
       description: 'Manages tasks, scheduling, and productivity optimization',
       avatar: '/sub-agent-2.png',
+      specialization: 'Task Management',
       specializations: ['Task Management', 'Time Optimization', 'Goal Setting'],
       parentAgent: 1,
     },
     {
-      id: 4,
+      id: '4',
       name: 'Creative Agent',
       type: 'Sub-Agent',
       domain: 'Creative',
       personality: 'Innovative',
       level: 1,
-      xp: 25,
-      status: 'Idle',
+      xp: 200,
+      tasksCompleted: 15,
+      usageCount: 75,
+      status: 'training',
+      lastActive: '30 minutes ago',
       description: 'Generates creative ideas and artistic content',
       avatar: '/sub-agent-2.png',
+      specialization: 'Design',
       specializations: ['Design', 'Writing', 'Art'],
       parentAgent: 1,
     },
-  ];
+    {
+      id: '5',
+      name: 'Technical Agent',
+      type: 'Sub-Agent',
+      domain: 'Technical',
+      personality: 'Analytical',
+      level: 4,
+      xp: 4000,
+      tasksCompleted: 280,
+      usageCount: 1200,
+      status: 'active',
+      lastActive: '1 minute ago',
+      description: 'Handles technical tasks and code generation',
+      avatar: '/sub-agent-3.png',
+      specialization: 'Coding',
+      specializations: ['Coding', 'Debugging', 'Architecture'],
+      parentAgent: 1,
+    },
+  ]);
 
-  const getDomainIcon = (domain: string) => {
-    switch (domain) {
-      case 'Learning': return <SchoolIcon />;
-      case 'Productivity': return <PsychologyIcon />;
-      case 'Health & Wellness': return <FitnessIcon />;
-      case 'Creative': return <CreativeIcon />;
-      case 'Technical': return <TechnicalIcon />;
-      case 'Business': return <BusinessIcon />;
-      case 'Orchestration': return <AutoAwesomeIcon />;
-      default: return <PsychologyIcon />;
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>(agents);
+
+  useEffect(() => {
+    setFilteredAgents(agents);
+  }, [agents]);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+    
+    // Filter agents based on tab
+    switch (newValue) {
+      case 0: // All Agents
+        setFilteredAgents(agents);
+        break;
+      case 1: // Master Agents
+        setFilteredAgents(agents.filter(agent => agent.type === 'Master'));
+        break;
+      case 2: // Sub-Agents
+        setFilteredAgents(agents.filter(agent => agent.type === 'Sub-Agent'));
+        break;
+      case 3: // Upgradeable
+        setFilteredAgents(agents.filter(agent => {
+          const tier = getAgentTier(agent.level);
+          return tier && agent.level < 5;
+        }));
+        break;
+      default:
+        setFilteredAgents(agents);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return '#2ed573';
-      case 'Idle': return '#fdcb6e';
-      case 'Busy': return '#ff3860';
-      default: return '#666';
+  const handleUpgrade = (agentId: string) => {
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) {
+      setSelectedAgent(agent);
+      setShowUpgradeModal(true);
     }
   };
 
-  const handleChat = (agent: any) => {
+  const handleUpgradeConfirm = (agentId: string) => {
+    // Simulate upgrade process
+    setAgents(prevAgents => 
+      prevAgents.map(agent => 
+        agent.id === agentId 
+          ? { 
+              ...agent, 
+              level: agent.level + 1,
+              xp: 0, // Reset XP after upgrade
+              tasksCompleted: 0, // Reset tasks after upgrade
+              usageCount: 0, // Reset usage after upgrade
+            }
+          : agent
+      )
+    );
+
+    // Update user balance (mock)
+    setUserBalance(prev => ({
+      dmt: prev.dmt - 50, // Mock cost
+      dmtx: prev.dmtx - 5,
+    }));
+
+    setSnackbar({
+      open: true,
+      message: `${selectedAgent?.name} upgraded to Level ${selectedAgent ? selectedAgent.level + 1 : 1}!`,
+      severity: 'success'
+    });
+
+    setShowUpgradeModal(false);
+    setSelectedAgent(null);
+  };
+
+  const handleTaskCompleted = (agentId: string, xpGained: number, dmtSpent: number) => {
+    setAgents(prev => prev.map(agent => 
+      agent.id === agentId 
+        ? { 
+            ...agent, 
+            xp: agent.xp + xpGained, 
+            tasksCompleted: agent.tasksCompleted + 1,
+            usageCount: agent.usageCount + 1
+          }
+        : agent
+    ));
+    setUserBalance(prev => ({ 
+      ...prev, 
+      dmt: Math.max(0, prev.dmt - dmtSpent) 
+    }));
+    setSnackbar({ 
+      open: true, 
+      message: `Task completed! +${xpGained} XP, -${dmtSpent} DMT`, 
+      severity: 'success' 
+    });
+  };
+
+  const handleManageTasks = (agent: Agent) => {
     setSelectedAgent(agent);
-    setShowChatDialog(true);
+    setShowTaskManagement(true);
   };
 
-  const handleTask = (agent: any) => {
-    setSelectedAgent(agent);
-    setShowTaskDialog(true);
+  const getTierStats = () => {
+    const tierCounts = agents.reduce((acc, agent) => {
+      const tier = getAgentTier(agent.level);
+      if (tier) {
+        acc[tier.llmTier] = (acc[tier.llmTier] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    return tierCounts;
   };
 
-  const handleUpgrade = (agent: any) => {
-    setSelectedAgent(agent);
-    setShowUpgradeDialog(true);
-  };
-
-  const sendChatMessage = () => {
-    if (!chatMessage.trim()) return;
-    
-    // In real app, this would send message to the agent
-    console.log(`Sending message to ${selectedAgent.name}:`, chatMessage);
-    
-    setChatMessage('');
-    setShowChatDialog(false);
-    alert(`Message sent to ${selectedAgent.name}! They will respond shortly.`);
-  };
-
-  const assignTask = () => {
-    if (!taskDescription.trim()) return;
-    
-    // In real app, this would assign task to the agent
-    console.log(`Assigning task to ${selectedAgent.name}:`, taskDescription);
-    
-    setTaskDescription('');
-    setShowTaskDialog(false);
-    alert(`Task assigned to ${selectedAgent.name}! They will start working on it.`);
-  };
-
-  const upgradeAgent = () => {
-    if (!upgradeType) return;
-    
-    // In real app, this would upgrade the agent
-    console.log(`Upgrading ${selectedAgent.name} with:`, upgradeType);
-    
-    setUpgradeType('');
-    setShowUpgradeDialog(false);
-    alert(`${selectedAgent.name} has been upgraded with ${upgradeType}!`);
-  };
+  const tierStats = getTierStats();
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, width: '100%', maxWidth: 1200, mx: 'auto' }}>
-      <Typography variant="h3" sx={{ color: '#00ffff', fontWeight: 'bold', mb: 2, textShadow: '0 0 8px #00ffff' }}>
-        🤖 Agent Management
-      </Typography>
-      
-      <Alert severity="info" sx={{ mb: 3, background: 'rgba(25, 25, 25, 0.9)', border: '1px solid #00ffff' }}>
-        <Typography variant="body1" sx={{ color: 'white' }}>
-          <strong>Master Agent System:</strong> The Master Agent coordinates all Sub-Agents. Sub-Agents specialize in specific domains and report back to the Master Agent.
-        </Typography>
-      </Alert>
-
-      <Grid container spacing={3}>
-        {agents.map((agent) => (
-          <Grid item xs={12} md={6} lg={4} key={agent.id}>
-            <Card
+    <Box sx={{ p: 4, bgcolor: '#121212', minHeight: '100vh' }}>
+      {/* Task Creation Modal */}
+      <Dialog 
+        open={showTaskModal} 
+        onClose={() => setShowTaskModal(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(25, 25, 25, 0.95)',
+            color: 'white',
+            border: '2px solid #00ffff',
+            borderRadius: 2,
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          color: '#00ffff', 
+          borderBottom: '1px solid #00ffff',
+          fontSize: '1.5rem',
+          fontWeight: 'bold'
+        }}>
+          🎯 Create New Task
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+            <TextField
+              label="Task Name"
+              variant="outlined"
+              fullWidth
+              value={taskName}
+              onChange={e => setTaskName(e.target.value)}
               sx={{
-                background: 'rgba(25, 25, 25, 0.9)',
-                border: `2px solid ${getStatusColor(agent.status)}`,
-                borderRadius: 3,
-                height: '100%',
-                transition: 'all 0.3s ease',
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': {
+                    borderColor: '#00ffff',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#00ffff',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00ffff',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#b0b0b0',
+                  '&.Mui-focused': {
+                    color: '#00ffff',
+                  },
+                },
+              }}
+            />
+            <TextField
+              label="Task Description"
+              variant="outlined"
+              fullWidth
+              multiline
+              minRows={3}
+              value={taskDescription}
+              onChange={e => setTaskDescription(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: 'white',
+                  '& fieldset': {
+                    borderColor: '#00ffff',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#00ffff',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00ffff',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: '#b0b0b0',
+                  '&.Mui-focused': {
+                    color: '#00ffff',
+                  },
+                },
+              }}
+            />
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: '#b0b0b0' }}>Assign to Agent</InputLabel>
+              <Select
+                value={assignedAgent}
+                onChange={e => setAssignedAgent(e.target.value)}
+                label="Assign to Agent"
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00ffff',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00ffff',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00ffff',
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: '#00ffff',
+                  },
+                }}
+              >
+                {agents.map(agent => (
+                  <MenuItem key={agent.id} value={agent.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <PsychologyIcon sx={{ color: '#00ffff' }} />
+                      <Typography>{agent.name}</Typography>
+                      <Chip 
+                        label={agent.type} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: agent.type === 'Master' ? '#ff9800' : '#4caf50',
+                          color: 'white',
+                          fontSize: '0.7rem'
+                        }} 
+                      />
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: '#b0b0b0' }}>Task Priority</InputLabel>
+              <Select
+                value={taskPriority}
+                onChange={e => setTaskPriority(e.target.value)}
+                label="Task Priority"
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00ffff',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00ffff',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00ffff',
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: '#00ffff',
+                  },
+                }}
+              >
+                <MenuItem value="low">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Low" size="small" color="success" />
+                    <Typography>Low Priority</Typography>
+                  </Box>
+                </MenuItem>
+                <MenuItem value="medium">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="Medium" size="small" color="warning" />
+                    <Typography>Medium Priority</Typography>
+                  </Box>
+                </MenuItem>
+                <MenuItem value="high">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Chip label="High" size="small" color="error" />
+                    <Typography>High Priority</Typography>
+                  </Box>
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ 
+          p: 3, 
+          borderTop: '1px solid #00ffff',
+          gap: 2 
+        }}>
+          <Button 
+            onClick={() => setShowTaskModal(false)} 
+            variant="outlined"
+            sx={{ 
+              borderColor: '#666',
+              color: '#666',
+              '&:hover': {
+                borderColor: '#999',
+                color: '#999',
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              console.log('Task Created:', {
+                taskName,
+                taskDescription,
+                assignedAgent,
+                taskPriority,
+              });
+              setShowTaskModal(false);
+              setSnackbar({ open: true, message: 'Task created successfully!', severity: 'success' });
+              setTaskName('');
+              setTaskDescription('');
+              setAssignedAgent('');
+              setTaskPriority('');
+            }}
+            variant="contained"
+            sx={{
+              bgcolor: '#00ffff',
+              color: '#000',
+              fontWeight: 'bold',
+              '&:hover': {
+                bgcolor: '#00cccc',
+              }
+            }}
+            disabled={!taskName || !taskDescription || !assignedAgent || !taskPriority}
+          >
+            Create Task
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h3" sx={{ color: '#00ffff', mb: 2, fontWeight: 'bold' }}>
+          🤖 Agent Management
+        </Typography>
+        <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 3 }}>
+          Manage, upgrade, and monitor your AI agents
+        </Typography>
+
+        {/* Stats Overview */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+          <Chip
+            icon={<PsychologyIcon />}
+            label={`${agents.length} Total Agents`}
+            sx={{ bgcolor: 'rgba(0, 255, 255, 0.1)', color: '#00ffff', border: '1px solid #00ffff' }}
+          />
+          <Chip
+            icon={<StarIcon />}
+            label={`${tierStats.Mini || 0} Mini LLM`}
+            sx={{ bgcolor: 'rgba(76, 175, 80, 0.1)', color: '#4caf50', border: '1px solid #4caf50' }}
+          />
+          <Chip
+            icon={<TrendingUpIcon />}
+            label={`${tierStats.Pro || 0} Pro LLM`}
+            sx={{ bgcolor: 'rgba(33, 150, 243, 0.1)', color: '#2196f3', border: '1px solid #2196f3' }}
+          />
+          <Chip
+            icon={<AutoAwesomeIcon />}
+            label={`${tierStats.Custom || 0} Custom LLM`}
+            sx={{ bgcolor: 'rgba(255, 152, 0, 0.1)', color: '#ff9800', border: '1px solid #ff9800' }}
+          />
+        </Box>
+
+        {/* Controls */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTab-root': {
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&.Mui-selected': { color: '#00ffff' },
+              },
+              '& .MuiTabs-indicator': { bgcolor: '#00ffff' },
+            }}
+          >
+            <Tab label="All Agents" />
+            <Tab label="Master Agents" />
+            <Tab label="Sub-Agents" />
+            <Tab label="Upgradeable" />
+          </Tabs>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant={viewMode === 'grid' ? 'contained' : 'outlined'}
+              startIcon={<GridIcon />}
+              onClick={() => setViewMode('grid')}
+              sx={{
+                bgcolor: viewMode === 'grid' ? '#00ffff' : 'transparent',
+                color: viewMode === 'grid' ? 'black' : '#00ffff',
+                borderColor: '#00ffff',
                 '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: `0 8px 25px ${getStatusColor(agent.status)}40`,
+                  bgcolor: viewMode === 'grid' ? '#00e5e5' : 'rgba(0, 255, 255, 0.1)',
                 },
               }}
             >
-              <CardContent>
-                <Box display="flex" alignItems="center" mb={2}>
-                  <Avatar
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      mr: 2,
-                      background: agent.type === 'Master' ? '#00ffff' : '#2ed573',
-                    }}
-                  >
-                    {getDomainIcon(agent.domain)}
-                  </Avatar>
-                  <Box flex={1}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
-                      {agent.name}
-                    </Typography>
-                    <Chip
-                      label={agent.type}
-                      size="small"
-                      sx={{
-                        background: agent.type === 'Master' ? '#00ffff' : '#2ed573',
-                        color: 'white',
-                        fontWeight: 'bold',
-                      }}
-                    />
-                  </Box>
-                </Box>
+              Grid
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'contained' : 'outlined'}
+              startIcon={<ListIcon />}
+              onClick={() => setViewMode('list')}
+              sx={{
+                bgcolor: viewMode === 'list' ? '#00ffff' : 'transparent',
+                color: viewMode === 'list' ? 'black' : '#00ffff',
+                borderColor: '#00ffff',
+                '&:hover': {
+                  bgcolor: viewMode === 'list' ? '#00e5e5' : 'rgba(0, 255, 255, 0.1)',
+                },
+              }}
+            >
+              List
+            </Button>
+          </Box>
+        </Box>
+      </Box>
 
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                  {agent.description}
-                </Typography>
+      {/* Moved task creation button outside the fallback */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{
+            bgcolor: '#00ffff',
+            color: 'black',
+            '&:hover': { bgcolor: '#00e5e5' },
+          }}
+          onClick={() => setShowTaskModal(true)}
+        >
+          Create New Task
+        </Button>
+      </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                    Level {agent.level} | XP: {agent.xp}
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={(agent.xp % 100)}
-                    sx={{
-                      height: 6,
-                      borderRadius: 3,
-                      background: '#333',
-                      '& .MuiLinearProgress-bar': {
-                        background: agent.type === 'Master' ? '#00ffff' : '#2ed573',
-                      },
-                    }}
-                  />
-                </Box>
-
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    Domain: {agent.domain}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold' }}>
-                    {agent.personality} Personality
-                  </Typography>
-                </Box>
-
-                {agent.specializations && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      Specializations:
-                    </Typography>
-                    <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
-                      {agent.specializations.map((spec, index) => (
-                        <Chip
-                          key={index}
-                          label={spec}
-                          size="small"
-                          sx={{
-                            background: '#333',
-                            color: '#00ffff',
-                            fontSize: '0.7rem',
-                          }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<ChatIcon />}
-                    onClick={() => handleChat(agent)}
-                    sx={{
-                      borderColor: '#00ffff',
-                      color: '#00ffff',
-                      '&:hover': {
-                        borderColor: '#00cccc',
-                        background: '#00ffff20',
-                      },
-                    }}
-                  >
-                    Chat
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<TaskIcon />}
-                    onClick={() => handleTask(agent)}
-                    sx={{
-                      borderColor: '#2ed573',
-                      color: '#2ed573',
-                      '&:hover': {
-                        borderColor: '#2ed573',
-                        background: '#2ed57320',
-                      },
-                    }}
-                  >
-                    Task
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<UpgradeIcon />}
-                    onClick={() => handleUpgrade(agent)}
-                    sx={{
-                      borderColor: '#ff3860',
-                      color: '#ff3860',
-                      '&:hover': {
-                        borderColor: '#ff3860',
-                        background: '#ff386020',
-                      },
-                    }}
-                  >
-                    Upgrade
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Chat Dialog */}
-      <Dialog open={showChatDialog} onClose={() => setShowChatDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: '#00ffff', fontWeight: 'bold' }}>
-          Chat with {selectedAgent?.name}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Your message"
-            value={chatMessage}
-            onChange={(e) => setChatMessage(e.target.value)}
-            sx={{ mt: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowChatDialog(false)} sx={{ color: 'text.secondary' }}>
-            Cancel
-          </Button>
-          <Button onClick={sendChatMessage} sx={{ color: '#00ffff' }}>
-            Send
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Task Dialog */}
-      <Dialog open={showTaskDialog} onClose={() => setShowTaskDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: '#2ed573', fontWeight: 'bold' }}>
-          Assign Task to {selectedAgent?.name}
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Task description"
-            value={taskDescription}
-            onChange={(e) => setTaskDescription(e.target.value)}
-            sx={{ mt: 1 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowTaskDialog(false)} sx={{ color: 'text.secondary' }}>
-            Cancel
-          </Button>
-          <Button onClick={assignTask} sx={{ color: '#2ed573' }}>
-            Assign
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Upgrade Dialog */}
-      <Dialog open={showUpgradeDialog} onClose={() => setShowUpgradeDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: '#ff3860', fontWeight: 'bold' }}>
-          Upgrade {selectedAgent?.name}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            Choose upgrade type:
+      {/* Agents Grid/List */}
+      {filteredAgents.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}>
+            No agents found
           </Typography>
-          <List>
-            <ListItem button onClick={() => setUpgradeType('Enhanced Intelligence')}>
-              <ListItemText 
-                primary="Enhanced Intelligence" 
-                secondary="Improves decision-making and problem-solving"
-              />
-            </ListItem>
-            <ListItem button onClick={() => setUpgradeType('Specialized Skills')}>
-              <ListItemText 
-                primary="Specialized Skills" 
-                secondary="Adds domain-specific capabilities"
-              />
-            </ListItem>
-            <ListItem button onClick={() => setUpgradeType('Communication')}>
-              <ListItemText 
-                primary="Communication" 
-                secondary="Improves interaction and collaboration"
-              />
-            </ListItem>
-          </List>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowUpgradeDialog(false)} sx={{ color: 'text.secondary' }}>
-            Cancel
-          </Button>
-          <Button onClick={upgradeAgent} disabled={!upgradeType} sx={{ color: '#ff3860' }}>
-            Upgrade
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredAgents.map((agent, index) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={agent.id}>
+              <Fade in timeout={300 + index * 100}>
+                <div>
+                  <AgentCard
+                    agent={agent}
+                    onUpgrade={handleUpgrade}
+                    onManageTasks={handleManageTasks}
+                    userBalance={userBalance}
+                  />
+                </div>
+              </Fade>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {/* Upgrade Modal */}
+      {selectedAgent && (
+        <AgentUpgradeModal
+          open={showUpgradeModal}
+          onClose={() => {
+            setShowUpgradeModal(false);
+            setSelectedAgent(null);
+          }}
+          onUpgrade={handleUpgradeConfirm}
+          agent={selectedAgent}
+          userBalance={userBalance}
+        />
+      )}
+
+      {/* Task Management Modal */}
+      {showTaskManagement && selectedAgent && (
+        <Dialog
+          open={showTaskManagement}
+          onClose={() => setShowTaskManagement(false)}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{
+            sx: {
+              bgcolor: '#121212',
+              color: 'white',
+              minHeight: '80vh',
+            }
+          }}
+        >
+          <DialogTitle sx={{ color: '#00ffff', borderBottom: '1px solid #00ffff' }}>
+            Task Management - {selectedAgent.name}
+          </DialogTitle>
+          <DialogContent sx={{ p: 0 }}>
+            <TaskManagement
+              selectedAgent={{
+                id: selectedAgent.id,
+                name: selectedAgent.name,
+                level: selectedAgent.level,
+                capabilities: selectedAgent.specializations,
+                dmtBalance: userBalance.dmt,
+              }}
+              onTaskCompleted={handleTaskCompleted}
+            />
+          </DialogContent>
+          <DialogActions sx={{ borderTop: '1px solid #00ffff', p: 2 }}>
+            <Button
+              onClick={() => setShowTaskManagement(false)}
+              sx={{ color: '#00ffff' }}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
-export default AgentManagement; 
+export default AgentManagement;

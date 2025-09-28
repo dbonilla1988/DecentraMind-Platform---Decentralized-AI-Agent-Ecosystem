@@ -29,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${orbitron.variable}`} suppressHydrationWarning>
-      <body className="m-0 p-0 bg-gray-900 text-white min-h-screen">
+    <html lang="en" className={`${inter.variable} ${orbitron.variable} dark`} suppressHydrationWarning>
+      <body className="m-0 p-0 bg-zinc-900 text-white min-h-screen">
                         <ReduxProvider>
                   <ThemeProvider>
                     <WalletProvider>

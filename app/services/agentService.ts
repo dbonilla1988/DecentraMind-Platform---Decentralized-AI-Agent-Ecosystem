@@ -45,6 +45,7 @@ export interface Agent {
     tasksCompleted: number;
     successRate: number;
     averageResponseTime: number;
+    totalEarnings: number;
   };
   metadata: {
     model: string;
@@ -142,7 +143,8 @@ class AgentService {
           performance: {
             tasksCompleted: 25,
             successRate: 95,
-            averageResponseTime: 2.5
+            averageResponseTime: 2.5,
+            totalEarnings: 0
           },
           metadata: {
             model: 'master-coordinator-v1',
@@ -195,7 +197,8 @@ class AgentService {
           performance: {
             tasksCompleted: 15,
             successRate: 90,
-            averageResponseTime: 1.8
+            averageResponseTime: 1.8,
+            totalEarnings: 0
           },
           metadata: {
             model: 'gpt-4',
@@ -286,7 +289,7 @@ class AgentService {
       const mintingFee = this.calculateMintingFee(agentData.type || 'sub');
       
       // REAL BLOCKCHAIN TRANSACTION - Mint agent on Solana
-      const solanaService = SolanaService.getInstance();
+      const solanaService = SolanaService;
       const blockchainResult = await solanaService.mintAgent(mintingFee);
       
       if (!blockchainResult.success) {
@@ -326,7 +329,8 @@ class AgentService {
             performance: {
               tasksCompleted: 0,
               successRate: 100,
-              averageResponseTime: 0
+              averageResponseTime: 0,
+              totalEarnings: 0
             },
             metadata: {
               model: 'gpt-4',
@@ -398,7 +402,8 @@ class AgentService {
           performance: {
             tasksCompleted: 0,
             successRate: 100,
-            averageResponseTime: 0
+            averageResponseTime: 0,
+            totalEarnings: 0
           },
           metadata: {
             model: 'gpt-4',
@@ -731,7 +736,8 @@ class AgentService {
         performance: {
           tasksCompleted: 0,
           successRate: 100,
-          averageResponseTime: 0
+          averageResponseTime: 0,
+          totalEarnings: 0
         },
         metadata: {
           model: 'master-coordinator-v1',
@@ -1025,12 +1031,12 @@ class AgentService {
     
     const analysis = {
       primaryDomain: 'general',
-      secondaryDomains: [],
+      secondaryDomains: [] as string[],
       complexity: 'simple',
       urgency: 'normal',
       requiresResearch: false,
       requiresMultipleAgents: false,
-      keywords: []
+      keywords: [] as string[]
     };
 
     // Detect primary domain with more comprehensive keywords
@@ -1649,7 +1655,7 @@ ${domainAgents.map(agent =>
     };
 
     const domainResponse = domainResponses[domain as keyof typeof domainResponses] || domainResponses['Technical'];
-    return domainResponse[context.intent] || domainResponse.general;
+    return domainResponse[context.intent as keyof typeof domainResponse] || domainResponse.general;
   }
 
   async getAgentById(agentId: string): Promise<Agent | null> {
@@ -2227,7 +2233,7 @@ ${domainAgents.map(agent =>
       ]
     };
 
-    const domainKnowledge = baseKnowledge[domain] || baseKnowledge['Technical'];
+    const domainKnowledge = baseKnowledge[domain as keyof typeof baseKnowledge] || baseKnowledge['Technical'];
     return domainKnowledge.slice(0, Math.min(level + 2, domainKnowledge.length));
   }
 }
