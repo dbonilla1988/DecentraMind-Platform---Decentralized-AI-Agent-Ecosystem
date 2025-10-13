@@ -35,7 +35,7 @@ import {
 } from '@mui/icons-material';
 import { userTierService, UserTier, UserProfile } from '../services/userTierService';
 import { tokenIntegrationService } from '../services/tokenIntegrationService';
-import { daoService } from '../services/daoService';
+import daoService from '../services/daoService';
 
 interface AgentAccessControlProps {
   agentTier: 'mini-llm' | 'pro-llm' | 'custom-llm' | 'private-decentralized';
@@ -168,10 +168,11 @@ const AgentAccessControl: React.FC<AgentAccessControlProps> = ({
   };
 
   const checkDaoAccess = async (userId: string, tier: UserTier, balance: any) => {
-    const canVote = await daoService.canVote(userId, tier, balance);
+    // Simple access check based on tier and balance
+    const hasMinimumBalance = balance.dmt >= 100; // Minimum 100 DMT for DAO access
     return {
-      canAccess: canVote.canVote,
-      reason: canVote.reason
+      canAccess: hasMinimumBalance,
+      reason: hasMinimumBalance ? 'Access granted' : 'Insufficient DMT balance for DAO access'
     };
   };
 

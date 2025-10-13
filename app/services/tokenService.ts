@@ -94,7 +94,7 @@ export class TokenService {
 
       // For now, simulate a successful transaction
       // In production, this would be a real SPL token transfer
-      const transaction = new (await import('@solana/web3.js')).Transaction();
+      const transaction = new ((await import('@solana/web3.js')).Transaction)();
       
       // Add a simple transfer instruction (SOL transfer for now)
       const { SystemProgram } = await import('@solana/web3.js');
@@ -157,7 +157,7 @@ export class TokenService {
 
       // For now, simulate a successful approval
       // In production, this would be a real SPL token approval
-      const transaction = new (await import('@solana/web3.js')).Transaction();
+      const transaction = new ((await import('@solana/web3.js')).Transaction)();
       
       // Add a simple transfer instruction (SOL transfer for now)
       const { SystemProgram } = await import('@solana/web3.js');

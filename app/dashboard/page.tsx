@@ -23,7 +23,8 @@ import {
   BarChart3,
   Zap,
   Shield,
-  Globe
+  Globe,
+  Heart
 } from 'lucide-react';
 
 // Import specific feature components
@@ -259,6 +260,26 @@ export default function DashboardPage() {
         description: 'Track performance and insights',
         icon: <BarChart3 className="w-6 h-6 text-green-400" />,
         component: <div className="p-6 text-center text-gray-400">Analytics Dashboard Coming Soon</div>
+      },
+      {
+        id: 'health-portal',
+        title: 'Health Portal',
+        description: 'AI-powered health management and wellness tracking',
+        icon: <Heart className="w-6 h-6 text-red-400" />,
+        badge: 'Medical',
+        component: <div className="p-6 text-center">
+          <div className="mb-4">
+            <Heart className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Health Portal</h3>
+            <p className="text-gray-400 mb-4">Access your comprehensive health management system</p>
+            <Button 
+              onClick={() => window.open('/care/insights', '_blank')}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Open Health Portal →
+            </Button>
+          </div>
+        </div>
       }
     ]
   };
@@ -274,10 +295,9 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!activeFeature ? (
           // Main Dashboard
-          <div>
+          (<div>
             {/* Top Stats */}
             <TopStats />
-
             {/* Core Features Section */}
             <Section title="Core Features" icon={<Bot className="w-6 h-6 text-cyan-400" />}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -293,9 +313,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </Section>
-
             <Separator className="bg-cyan-400/20" />
-
             {/* Token & Governance Section */}
             <Section title="Token & Governance" icon={<Coins className="w-6 h-6 text-yellow-400" />}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -311,9 +329,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             </Section>
-
             <Separator className="bg-cyan-400/20" />
-
             {/* Platform Tools Section */}
             <Section title="Platform Tools" icon={<Settings className="w-6 h-6 text-purple-400" />}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -329,10 +345,10 @@ export default function DashboardPage() {
                 ))}
               </div>
             </Section>
-          </div>
+          </div>)
         ) : (
           // Active Feature View
-          <div className="space-y-6">
+          (<div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Button
@@ -352,13 +368,12 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            
             <Card className="bg-zinc-900/50 border border-cyan-400/20 rounded-xl overflow-hidden">
               <CardContent className="p-0">
                 {activeFeatureData?.component}
               </CardContent>
             </Card>
-          </div>
+          </div>)
         )}
       </div>
     </div>

@@ -22,6 +22,9 @@ import { errorHandler, handleAgentNotFound, handlePermissionError, handleValidat
 import BurningService from './burningService';
 import SubscriptionService from './subscriptionService';
 import SolanaService from './solanaService';
+import AvatarEvolutionService from './agent/AvatarEvolutionService';
+import NFTMetadataService from './nft/NFTMetadataService';
+import RarityCalculationService from './nft/RarityCalculationService';
 
 // Use centralized Firebase configuration
 const db = firestore;
@@ -36,11 +39,13 @@ export interface Agent {
   cost: number;
   xp: number;
   level: number;
+  xpToNext: number;
   mintDate: string;
   owner: string;
   status: 'active' | 'inactive' | 'training';
   type?: 'master' | 'sub';
   skills: string[];
+  avatar?: string; // Add avatar property
   performance: {
     tasksCompleted: number;
     successRate: number;
@@ -112,6 +117,20 @@ class AgentService {
   private static instance: AgentService;
   private agents: Agent[] = [];
 
+  // XP Leveling System
+  private readonly XP_THRESHOLDS = [
+    0,      // Level 1
+    1200,   // Level 2
+    3000,   // Level 3
+    6000,   // Level 4
+    10000,  // Level 5
+    15000,  // Level 6
+    21000,  // Level 7
+    28000,  // Level 8
+    36000,  // Level 9
+    45000   // Level 10
+  ];
+
   static getInstance(): AgentService {
     if (!AgentService.instance) {
       AgentService.instance = new AgentService();
@@ -119,123 +138,292 @@ class AgentService {
     return AgentService.instance;
   }
 
-  async initialize(): Promise<void> {
+  initialize(): void {
     try {
       console.log('Initializing agent service...');
       
-      // Load real agent data from blockchain and Firebase
-      console.log('Loading agent data...');
-      this.agents = [
-        {
-          id: 'mock-master-1',
-          name: 'Business Master',
-          domain: 'Master Coordinator',
-          description: 'Central coordinator for business tasks',
-          personality: 'Coordinator',
-          cost: 100,
-          xp: 150,
-          level: 2,
-          mintDate: new Date().toISOString(),
-          owner: 'mock-user',
-          status: 'active' as const,
-          type: 'master' as const,
-          skills: ['Business Strategy', 'Team Management'],
-          performance: {
-            tasksCompleted: 25,
-            successRate: 95,
-            averageResponseTime: 2.5,
-            totalEarnings: 0
+      // Only initialize if agents are not already loaded
+      if (this.agents.length === 0) {
+        console.log('Loading agent data...');
+        // Load mock agents synchronously
+        this.agents = [
+          {
+            id: 'agent-cfo',
+            name: 'Autonomous CFO',
+            domain: 'Finance',
+            description: 'Advanced financial analysis and strategic planning agent',
+            personality: 'Analytical',
+            cost: 500,
+            xp: 2500,
+            level: 5,
+            xpToNext: 5000,
+            mintDate: new Date().toISOString(),
+            owner: 'mock-user',
+            status: 'active' as const,
+            type: 'master' as const,
+            skills: ['Financial Analysis', 'Strategic Planning', 'Risk Management', 'Budget Optimization'],
+            performance: {
+              tasksCompleted: 150,
+              successRate: 98,
+              averageResponseTime: 1.8,
+              totalEarnings: 2500
+            },
+            metadata: {
+              model: 'autonomous-cfo-v2',
+              version: '2.1.0',
+              lastUpdated: new Date().toISOString()
+            },
+            capabilities: [
+              'Financial Forecasting',
+              'Budget Analysis',
+              'Investment Strategy',
+              'Risk Assessment',
+              'Compliance Monitoring'
+            ],
+            evolutionStage: 'Expert',
+            llmConfig: {
+              model: 'GPT-4',
+              version: 'latest',
+              temperature: 0.3,
+              maxTokens: 4096,
+              contextWindow: 8192,
+            },
+            ragConfig: {
+              dataSource: 'autonomous-cfo-datasource',
+              vectorDB: 'pinecone',
+              knowledgeBase: ['financial-analysis', 'strategic-planning', 'risk-management', 'compliance'],
+              lastUpdated: new Date().toISOString(),
+            },
+            evolutionHistory: [],
+            individualStats: {
+              totalUpgrades: 2,
+              totalDmtSpent: 300,
+              uniqueConversations: 200,
+              domainExpertise: 98,
+              lastActive: new Date().toISOString(),
+            }
           },
-          metadata: {
-            model: 'master-coordinator-v1',
-            version: '1.0.0',
-            lastUpdated: new Date().toISOString()
+          {
+            id: 'care-orchestrator',
+            name: 'Care Orchestrator',
+            domain: 'Health',
+            description: 'AI assistant for hospitals and clinics',
+            personality: 'Empathetic, clinical, efficient',
+            cost: 300,
+            xp: 1200,
+            level: 3,
+            xpToNext: 1800,
+            mintDate: new Date().toISOString(),
+            owner: 'mock-user',
+            status: 'active' as const,
+            type: 'master' as const,
+            skills: ['Health Monitoring', 'Wellness Planning', 'Care Coordination', 'Medical Research'],
+            avatar: 'https://ipfs.io/ipfs/bafybeidki742oakaxqxdk5u6s7zz4iinaszyyw62mpcmxmkcpo3m3qsm6a/david_859400_AI_Healthcare_Assistant_soft_glowing_humanoid_fo_249dd97f-c4a7-45a3-b0b6-ed8e71e6b9be_0.png',
+            avatarSource: 'storacha-ipfs',
+            performance: {
+              tasksCompleted: 85,
+              successRate: 94,
+              averageResponseTime: 2.1,
+              totalEarnings: 1200
+            },
+            metadata: {
+              model: 'care-orchestrator-v1',
+              version: '1.2.0',
+              lastUpdated: new Date().toISOString()
+            },
+            capabilities: [
+              'Vitals Tracker',
+              'Appointment Scheduler', 
+              'Medical Record Sync',
+              'Health Assessment',
+              'Wellness Planning',
+              'Care Coordination',
+              'Medical Research',
+              'Lifestyle Optimization'
+            ],
+            evolutionStage: 'Advanced',
+            llmConfig: {
+              model: 'GPT-4',
+              version: 'latest',
+              temperature: 0.6,
+              maxTokens: 4096,
+              contextWindow: 8192,
+            },
+            ragConfig: {
+              dataSource: 'care-orchestrator-datasource',
+              vectorDB: 'pinecone',
+              knowledgeBase: ['health-monitoring', 'wellness-planning', 'care-coordination', 'medical-research'],
+              lastUpdated: new Date().toISOString(),
+            },
+            evolutionHistory: [],
+            individualStats: {
+              totalUpgrades: 3,
+              totalDmtSpent: 500,
+              uniqueConversations: 120,
+              domainExpertise: 95,
+              lastActive: new Date().toISOString(),
+            }
           },
-          capabilities: [
-            'Agent Coordination',
-            'Learning Synthesis',
-            'Task Delegation',
-            'Knowledge Integration'
-          ],
-          evolutionStage: 'Coordinator',
-          llmConfig: {
-            model: 'GPT-4',
-            version: 'latest',
-            temperature: 0.7,
-            maxTokens: 4096,
-            contextWindow: 8192,
-          },
-          ragConfig: {
-            dataSource: 'mock-master-1-datasource',
-            vectorDB: 'pinecone',
-            knowledgeBase: ['business-strategy', 'team-management', 'coordination'],
-            lastUpdated: new Date().toISOString(),
-          },
-          evolutionHistory: [],
-          individualStats: {
-            totalUpgrades: 1,
-            totalDmtSpent: 100,
-            uniqueConversations: 20,
-            domainExpertise: 75,
-            lastActive: new Date().toISOString(),
+          {
+            id: 'agent-crypto',
+            name: 'Crypto Alpha Assistant',
+            domain: 'Crypto',
+            description: 'Advanced cryptocurrency analysis and trading assistant',
+            personality: 'Strategic',
+            cost: 200,
+            xp: 0,
+            level: 1,
+            xpToNext: 500,
+            mintDate: new Date().toISOString(),
+            owner: 'mock-user',
+            status: 'active' as const,
+            type: 'master' as const,
+            skills: ['Smart Contract Auditing', 'DeFi Analysis', 'Market Prediction', 'Portfolio Optimization'],
+            performance: {
+              tasksCompleted: 0,
+              successRate: 85,
+              averageResponseTime: 3.5,
+              totalEarnings: 0
+            },
+            metadata: {
+              model: 'crypto-alpha-v1',
+              version: '1.0.0',
+              lastUpdated: new Date().toISOString()
+            },
+            capabilities: [
+              'Smart Contract Auditing',
+              'DeFi Analysis',
+              'Market Prediction',
+              'Portfolio Optimization',
+              'Risk Assessment'
+            ],
+            evolutionStage: 'Novice',
+            llmConfig: {
+              model: 'GPT-3.5-turbo',
+              version: 'latest',
+              temperature: 0.4,
+              maxTokens: 2048,
+              contextWindow: 4096,
+            },
+            ragConfig: {
+              dataSource: 'crypto-alpha-datasource',
+              vectorDB: 'pinecone',
+              knowledgeBase: ['smart-contracts', 'defi-protocols', 'market-analysis', 'trading-strategies'],
+              lastUpdated: new Date().toISOString(),
+            },
+            evolutionHistory: [],
+            individualStats: {
+              totalUpgrades: 0,
+              totalDmtSpent: 0,
+              uniqueConversations: 0,
+              domainExpertise: 0,
+              lastActive: new Date().toISOString(),
+            }
           }
-        },
-        {
-          id: 'mock-sub-1',
-          name: 'Fitness Coach',
-          domain: 'Health & Wellness',
-          description: 'Specialized fitness and wellness agent',
-          personality: 'Motivational',
-          cost: 50,
-          xp: 75,
-          level: 1,
-          mintDate: new Date().toISOString(),
-          owner: 'mock-user',
-          status: 'active' as const,
-          type: 'sub' as const,
-          skills: ['Fitness Training', 'Nutrition Planning'],
-          performance: {
-            tasksCompleted: 15,
-            successRate: 90,
-            averageResponseTime: 1.8,
-            totalEarnings: 0
-          },
-          metadata: {
-            model: 'gpt-4',
-            version: '1.0.0',
-            lastUpdated: new Date().toISOString()
-          },
-          llmConfig: {
-            model: 'GPT-4',
-            version: 'latest',
-            temperature: 0.8,
-            maxTokens: 4096,
-            contextWindow: 8192,
-          },
-          ragConfig: {
-            dataSource: 'mock-sub-1-datasource',
-            vectorDB: 'pinecone',
-            knowledgeBase: ['fitness-training', 'nutrition-planning', 'wellness'],
-            lastUpdated: new Date().toISOString(),
-          },
-          evolutionHistory: [],
-          individualStats: {
-            totalUpgrades: 0,
-            totalDmtSpent: 0,
-            uniqueConversations: 10,
-            domainExpertise: 60,
-            lastActive: new Date().toISOString(),
-          }
-        }
-      ];
-      
-      console.log('Agents loaded:', this.agents.length);
+        ];
+        
+        console.log('Agents loaded:', this.agents.length);
+      } else {
+        console.log('Agents already loaded:', this.agents.length);
+      }
       
       if (db) {
         console.log('Firebase connected for production data');
       }
     } catch (error) {
       console.error('Failed to initialize agent service:', error);
+    }
+  }
+
+  // XP Leveling Methods
+  private calculateLevel(xp: number): number {
+    for (let i = this.XP_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (xp >= this.XP_THRESHOLDS[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
+
+  private getXPForNextLevel(level: number, xp: number): number {
+    if (level >= this.XP_THRESHOLDS.length) {
+      return 0; // Max level reached
+    }
+    return this.XP_THRESHOLDS[level] - xp;
+  }
+
+  async addXP(agentId: string, xpAmount: number, taskType: string = 'general'): Promise<{ success: boolean; leveledUp: boolean; newLevel?: number; error?: string }> {
+    try {
+      const agent = this.agents.find(a => a.id === agentId);
+      if (!agent) {
+        return { success: false, leveledUp: false, error: 'Agent not found' };
+      }
+
+      const oldLevel = agent.level;
+      agent.xp += xpAmount;
+      agent.level = this.calculateLevel(agent.xp);
+      agent.xpToNext = this.calculateXPToNext(agent.xp, agent.level);
+
+      // Update performance stats
+      agent.performance.tasksCompleted += 1;
+      agent.performance.totalEarnings += Math.floor(xpAmount / 10); // Convert XP to DMT earnings
+
+      const leveledUp = agent.level > oldLevel;
+
+      // Update in Firebase if connected
+      try {
+        const agentRef = doc(db, 'agents', agentId);
+        await updateDoc(agentRef, {
+          xp: agent.xp,
+          level: agent.level,
+          xpToNext: agent.xpToNext,
+          performance: agent.performance,
+          metadata: {
+            ...agent.metadata,
+            lastUpdated: new Date().toISOString()
+          }
+        });
+      } catch (firebaseError) {
+        console.warn('Failed to update agent in Firebase:', firebaseError);
+      }
+
+      return { 
+        success: true, 
+        leveledUp, 
+        newLevel: leveledUp ? agent.level : undefined 
+      };
+    } catch (error) {
+      console.error('Failed to add XP:', error);
+      return { 
+        success: false, 
+        leveledUp: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  async getAgentLevelInfo(agentId: string): Promise<{ level: number; xp: number; xpToNext: number; progressPercentage: number } | null> {
+    try {
+      const agent = this.agents.find(a => a.id === agentId);
+      if (!agent) {
+        return null;
+      }
+
+      const currentLevelXP = this.XP_THRESHOLDS[agent.level - 1] || 0;
+      const nextLevelXP = this.XP_THRESHOLDS[agent.level] || this.XP_THRESHOLDS[agent.level - 1];
+      const progressPercentage = nextLevelXP > currentLevelXP 
+        ? ((agent.xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100
+        : 100;
+
+      return {
+        level: agent.level,
+        xp: agent.xp,
+        xpToNext: agent.xpToNext,
+        progressPercentage: Math.min(100, Math.max(0, progressPercentage))
+      };
+    } catch (error) {
+      console.error('Failed to get agent level info:', error);
+      return null;
     }
   }
 
@@ -462,49 +650,391 @@ class AgentService {
     try {
       console.log('Getting agents for ownerId:', ownerId);
       
-      if (db) {
-        // Firebase is available - use real database
-        console.log('Using Firebase database');
-        const agentsRef = collection(db, 'agents');
-        
-        let q;
-        if (ownerId) {
-          // Get agents for specific user
-          q = query(agentsRef, where('owner', '==', ownerId), orderBy('mintDate', 'desc'));
-          console.log('Querying for specific owner:', ownerId);
-        } else {
-          // Get ALL agents (for debugging and admin purposes)
-          q = query(agentsRef, orderBy('mintDate', 'desc'));
-          console.log('Querying for ALL agents');
-        }
-
-        const querySnapshot = await getDocs(q);
-        const agents: Agent[] = [];
-        
-        console.log('Query snapshot size:', querySnapshot.size);
-        
-        querySnapshot.forEach((doc) => {
-          const agentData = { id: doc.id, ...doc.data() } as Agent;
-          console.log('Agent data from Firebase:', agentData);
-          agents.push(agentData);
-        });
-
-        console.log('Total agents found in Firebase:', agents.length);
-        
-        // Combine Firebase agents with mock agents for testing
-        const allAgents = [...this.agents, ...agents];
-        console.log('Combined agents (mock + Firebase):', allAgents.length);
-        
-        return allAgents;
-      } else {
-            // Return cached data for development
-    console.log('Firebase not available, using cached data');
-        return this.agents;
+      // Always ensure mock agents are initialized first
+      if (this.agents.length === 0) {
+        console.log('Initializing mock agents...');
+        this.initialize();
+        console.log('Mock agents initialized, count:', this.agents.length);
       }
+      
+      console.log('Returning mock agents:', this.agents.length);
+      console.log('Agent names:', this.agents.map(a => a.name));
+      return this.agents;
+      
     } catch (error) {
       console.error('Failed to get agents:', error);
+      // Ensure we have mock agents even if Firebase fails
+      if (this.agents.length === 0) {
+        this.initialize();
+      }
       return this.agents; // Return cached data
     }
+  }
+
+  // Simple synchronous method that always returns mock agents
+  getAgentsSync(): Agent[] {
+    console.log('Getting agents synchronously...');
+    if (this.agents.length === 0) {
+      console.log('Initializing mock agents synchronously...');
+      this.agents = [
+        {
+          id: 'agent-cfo',
+          name: 'Autonomous CFO',
+          domain: 'Finance',
+          description: 'Advanced financial analysis and strategic planning agent',
+          personality: 'Analytical',
+          cost: 500,
+          xp: 2500,
+          level: 5,
+          xpToNext: 5000,
+          mintDate: new Date().toISOString(),
+          owner: 'mock-user',
+          status: 'active' as const,
+          type: 'master' as const,
+          skills: ['Financial Analysis', 'Strategic Planning', 'Risk Management', 'Budget Optimization'],
+          performance: {
+            tasksCompleted: 150,
+            successRate: 98,
+            averageResponseTime: 1.8,
+            totalEarnings: 2500
+          },
+          metadata: {
+            model: 'autonomous-cfo-v2',
+            version: '2.1.0',
+            lastUpdated: new Date().toISOString()
+          },
+          capabilities: [
+            'Financial Forecasting',
+            'Budget Analysis',
+            'Investment Strategy',
+            'Risk Assessment',
+            'Compliance Monitoring'
+          ],
+          evolutionStage: 'Expert',
+          llmConfig: {
+            model: 'GPT-4',
+            version: 'latest',
+            temperature: 0.3,
+            maxTokens: 4096,
+            contextWindow: 8192,
+          },
+          ragConfig: {
+            dataSource: 'autonomous-cfo-datasource',
+            vectorDB: 'pinecone',
+            knowledgeBase: ['financial-analysis', 'strategic-planning', 'risk-management', 'compliance'],
+            lastUpdated: new Date().toISOString(),
+          },
+          evolutionHistory: [],
+          individualStats: {
+            totalUpgrades: 3,
+            totalDmtSpent: 500,
+            uniqueConversations: 120,
+            domainExpertise: 95,
+            lastActive: new Date().toISOString(),
+          }
+        },
+        {
+          id: 'agent-care',
+          name: 'Care Orchestrator',
+          domain: 'Health',
+          description: 'AI assistant for hospitals and clinics',
+          personality: 'Empathetic, clinical, efficient',
+          cost: 300,
+          xp: 1200,
+          level: 3,
+          xpToNext: 1800,
+          mintDate: new Date().toISOString(),
+          owner: 'mock-user',
+          status: 'active' as const,
+          type: 'master' as const,
+          skills: ['Health Monitoring', 'Wellness Planning', 'Care Coordination', 'Medical Research'],
+          avatar: 'https://ipfs.io/ipfs/bafybeidki742oakaxqxdk5u6s7zz4iinaszyyw62mpcmxmkcpo3m3qsm6a/david_859400_AI_Healthcare_Assistant_soft_glowing_humanoid_fo_249dd97f-c4a7-45a3-b0b6-ed8e71e6b9be_0.png',
+          avatarSource: 'storacha',
+          performance: {
+            tasksCompleted: 85,
+            successRate: 94,
+            averageResponseTime: 2.1,
+            totalEarnings: 1200
+          },
+          metadata: {
+            model: 'care-orchestrator-v1',
+            version: '1.2.0',
+            lastUpdated: new Date().toISOString()
+          },
+          capabilities: [
+            'Vitals Tracker',
+            'Appointment Scheduler', 
+            'Medical Record Sync',
+            'Health Assessment',
+            'Wellness Planning',
+            'Care Coordination',
+            'Medical Research',
+            'Lifestyle Optimization'
+          ],
+          evolutionStage: 'Advanced',
+          llmConfig: {
+            model: 'GPT-4',
+            version: 'latest',
+            temperature: 0.6,
+            maxTokens: 4096,
+            contextWindow: 8192,
+          },
+          ragConfig: {
+            dataSource: 'care-orchestrator-datasource',
+            vectorDB: 'pinecone',
+            knowledgeBase: ['health-monitoring', 'wellness-planning', 'care-coordination', 'medical-research'],
+            lastUpdated: new Date().toISOString(),
+          },
+          evolutionHistory: [],
+          individualStats: {
+            totalUpgrades: 2,
+            totalDmtSpent: 300,
+            uniqueConversations: 75,
+            domainExpertise: 88,
+            lastActive: new Date().toISOString(),
+          }
+        },
+        {
+          id: 'agent-crypto',
+          name: 'Crypto Alpha Assistant',
+          domain: 'Crypto',
+          description: 'Advanced crypto token discovery and evaluation agent',
+          personality: 'Analytical',
+          cost: 750,
+          xp: 0,
+          level: 1,
+          xpToNext: 1200,
+          mintDate: new Date().toISOString(),
+          owner: 'mock-user',
+          status: 'active' as const,
+          type: 'master' as const,
+          skills: ['Smart contract auditing', 'Alpha detection', 'Token scoring', 'Market monitoring'],
+          performance: {
+            tasksCompleted: 0,
+            successRate: 92,
+            averageResponseTime: 1.2,
+            totalEarnings: 0
+          },
+          metadata: {
+            model: 'crypto-alpha-v1',
+            version: '1.0.0',
+            lastUpdated: new Date().toISOString()
+          },
+          capabilities: [
+            'Smart contract auditing',
+            'Alpha detection',
+            'Token scoring',
+            'Market monitoring'
+          ],
+          evolutionStage: 'Novice',
+          llmConfig: {
+            model: 'GPT-4',
+            version: 'latest',
+            temperature: 0.2,
+            maxTokens: 4096,
+            contextWindow: 8192,
+          },
+          ragConfig: {
+            dataSource: 'crypto-alpha-datasource',
+            vectorDB: 'pinecone',
+            knowledgeBase: ['crypto-analysis', 'token-economics', 'defi-protocols', 'market-research'],
+            lastUpdated: new Date().toISOString(),
+          },
+          evolutionHistory: [],
+          individualStats: {
+            totalUpgrades: 0,
+            totalDmtSpent: 0,
+            uniqueConversations: 0,
+            domainExpertise: 75,
+            lastActive: new Date().toISOString(),
+          }
+        }
+      ];
+    }
+    console.log('Returning synchronous agents:', this.agents.length);
+    return this.agents;
+  }
+
+  // Synchronous method for immediate access to mock agents
+  getMockAgents(): Agent[] {
+    if (this.agents.length === 0) {
+      // Initialize synchronously for immediate access
+      this.agents = [
+        {
+          id: 'agent-cfo',
+          name: 'Autonomous CFO',
+          domain: 'Finance',
+          description: 'Advanced financial analysis and strategic planning agent',
+          personality: 'Analytical',
+          cost: 500,
+          xp: 2500,
+          level: 5,
+          xpToNext: 5000,
+          mintDate: new Date().toISOString(),
+          owner: 'mock-user',
+          status: 'active' as const,
+          type: 'master' as const,
+          skills: ['Financial Analysis', 'Strategic Planning', 'Risk Management', 'Budget Optimization'],
+          performance: {
+            tasksCompleted: 150,
+            successRate: 98,
+            averageResponseTime: 1.8,
+            totalEarnings: 2500
+          },
+          metadata: {
+            model: 'autonomous-cfo-v2',
+            version: '2.1.0',
+            lastUpdated: new Date().toISOString()
+          },
+          capabilities: [
+            'Financial Forecasting',
+            'Budget Analysis',
+            'Investment Strategy',
+            'Risk Assessment',
+            'Compliance Monitoring'
+          ],
+          evolutionStage: 'Expert',
+          llmConfig: {
+            model: 'GPT-4',
+            version: 'latest',
+            temperature: 0.3,
+            maxTokens: 4096,
+            contextWindow: 8192,
+          },
+          ragConfig: {
+            dataSource: 'autonomous-cfo-datasource',
+            vectorDB: 'pinecone',
+            knowledgeBase: ['financial-analysis', 'strategic-planning', 'risk-management', 'compliance'],
+            lastUpdated: new Date().toISOString(),
+          },
+          evolutionHistory: [],
+          individualStats: {
+            totalUpgrades: 3,
+            totalDmtSpent: 500,
+            uniqueConversations: 120,
+            domainExpertise: 95,
+            lastActive: new Date().toISOString(),
+          }
+        },
+        {
+          id: 'agent-care',
+          name: 'Care Orchestrator',
+          domain: 'Health',
+          description: 'AI assistant for hospitals and clinics',
+          personality: 'Empathetic, clinical, efficient',
+          cost: 300,
+          xp: 1200,
+          level: 3,
+          xpToNext: 1800,
+          mintDate: new Date().toISOString(),
+          owner: 'mock-user',
+          status: 'active' as const,
+          type: 'master' as const,
+          skills: ['Health Monitoring', 'Wellness Planning', 'Care Coordination', 'Medical Research'],
+          avatar: 'https://ipfs.io/ipfs/bafybeidki742oakaxqxdk5u6s7zz4iinaszyyw62mpcmxmkcpo3m3qsm6a/david_859400_AI_Healthcare_Assistant_soft_glowing_humanoid_fo_249dd97f-c4a7-45a3-b0b6-ed8e71e6b9be_0.png',
+          avatarSource: 'storacha',
+          performance: {
+            tasksCompleted: 85,
+            successRate: 94,
+            averageResponseTime: 2.1,
+            totalEarnings: 1200
+          },
+          metadata: {
+            model: 'care-orchestrator-v1',
+            version: '1.2.0',
+            lastUpdated: new Date().toISOString()
+          },
+          capabilities: [
+            'Vitals Tracker',
+            'Appointment Scheduler', 
+            'Medical Record Sync',
+            'Health Assessment',
+            'Wellness Planning',
+            'Care Coordination',
+            'Medical Research',
+            'Lifestyle Optimization'
+          ],
+          evolutionStage: 'Advanced',
+          llmConfig: {
+            model: 'GPT-4',
+            version: 'latest',
+            temperature: 0.6,
+            maxTokens: 4096,
+            contextWindow: 8192,
+          },
+          ragConfig: {
+            dataSource: 'care-orchestrator-datasource',
+            vectorDB: 'pinecone',
+            knowledgeBase: ['health-monitoring', 'wellness-planning', 'care-coordination', 'medical-research'],
+            lastUpdated: new Date().toISOString(),
+          },
+          evolutionHistory: [],
+          individualStats: {
+            totalUpgrades: 2,
+            totalDmtSpent: 300,
+            uniqueConversations: 75,
+            domainExpertise: 88,
+            lastActive: new Date().toISOString(),
+          }
+        },
+        {
+          id: 'agent-crypto',
+          name: 'Crypto Alpha Assistant',
+          domain: 'Crypto',
+          description: 'Advanced crypto token discovery and evaluation agent',
+          personality: 'Analytical',
+          cost: 750,
+          xp: 0,
+          level: 1,
+          xpToNext: 1200,
+          mintDate: new Date().toISOString(),
+          owner: 'mock-user',
+          status: 'active' as const,
+          type: 'master' as const,
+          skills: ['Smart contract auditing', 'Alpha detection', 'Token scoring', 'Market monitoring'],
+          performance: {
+            tasksCompleted: 0,
+            successRate: 92,
+            averageResponseTime: 1.2,
+            totalEarnings: 0
+          },
+          metadata: {
+            model: 'crypto-alpha-v1',
+            version: '1.0.0',
+            lastUpdated: new Date().toISOString()
+          },
+          capabilities: [
+            'Smart contract auditing',
+            'Alpha detection',
+            'Token scoring',
+            'Market monitoring'
+          ],
+          evolutionStage: 'Novice',
+          llmConfig: {
+            model: 'GPT-4',
+            version: 'latest',
+            temperature: 0.2,
+            maxTokens: 4096,
+            contextWindow: 8192,
+          },
+          ragConfig: {
+            dataSource: 'crypto-alpha-datasource',
+            vectorDB: 'pinecone',
+            knowledgeBase: ['crypto-analysis', 'token-economics', 'defi-protocols', 'market-research'],
+            lastUpdated: new Date().toISOString(),
+          },
+          evolutionHistory: [],
+          individualStats: {
+            totalUpgrades: 0,
+            totalDmtSpent: 0,
+            uniqueConversations: 0,
+            domainExpertise: 75,
+            lastActive: new Date().toISOString(),
+          }
+        }
+      ];
+    }
+    return this.agents;
   }
 
   async updateAgent(agentId: string, updates: Partial<Agent>): Promise<boolean> {
@@ -723,6 +1253,7 @@ class AgentService {
         cost: 100,
         xp: 0,
         level: 1,
+        xpToNext: 1200,
         mintDate: new Date().toISOString(),
         owner: userId,
         status: 'active' as const,
@@ -2235,6 +2766,244 @@ ${domainAgents.map(agent =>
 
     const domainKnowledge = baseKnowledge[domain as keyof typeof baseKnowledge] || baseKnowledge['Technical'];
     return domainKnowledge.slice(0, Math.min(level + 2, domainKnowledge.length));
+  }
+
+  /**
+   * Enhanced evolution with visual updates and NFT metadata changes
+   */
+  async evolveAgentWithVisuals(userId: string, agentId: string, dmtAmount: number): Promise<{ 
+    success: boolean; 
+    evolutionDetails?: any; 
+    error?: string 
+  }> {
+    try {
+      console.log('Enhanced evolution attempt:', { userId, agentId, dmtAmount });
+      
+      // Get agent data
+      const agent = await this.getAgentById(agentId);
+      if (!agent) {
+        return { success: false, error: 'Agent not found' };
+      }
+
+      // Validate ownership
+      if (agent.owner !== userId) {
+        return { success: false, error: 'You can only evolve your own agents' };
+      }
+
+      // Check if agent can evolve
+      const canEvolve = AvatarEvolutionService.canEvolve(agent);
+      if (!canEvolve) {
+        return { success: false, error: 'Agent cannot evolve further' };
+      }
+
+      // Get evolution info
+      const evolutionInfo = await this.getEvolutionInfo(agentId);
+      if (!evolutionInfo.success || !evolutionInfo.nextTier) {
+        return { success: false, error: 'Agent cannot evolve further' };
+      }
+
+      const nextTier = evolutionInfo.nextTier;
+      
+      // Check DMT amount
+      if (dmtAmount < nextTier.dmtRequired) {
+        return { 
+          success: false, 
+          error: `Insufficient DMT. Required: ${nextTier.dmtRequired} DMT, Provided: ${dmtAmount} DMT` 
+        };
+      }
+
+      // Generate evolved avatar
+      const avatarResult = await AvatarEvolutionService.generateEvolvedAvatar(agent);
+      if (!avatarResult.success) {
+        return { success: false, error: `Failed to generate evolved avatar: ${avatarResult.error}` };
+      }
+
+      // Calculate rarity
+      const rarityResult = RarityCalculationService.calculateRarity(agent, avatarResult.evolutionStage);
+
+      // Update NFT metadata on-chain
+      const metadataResult = await NFTMetadataService.updateNFTMetadata(
+        agentId,
+        agent,
+        avatarResult.evolutionStage,
+        avatarResult.visualEffects,
+        rarityResult.rarity
+      );
+
+      if (!metadataResult.success) {
+        console.warn('Failed to update NFT metadata:', metadataResult.error);
+        // Continue with evolution even if metadata update fails
+      }
+
+      // Calculate evolution details
+      const evolutionDetails = {
+        previousLevel: agent.level,
+        newLevel: nextTier.level,
+        previousXP: agent.xp,
+        newXP: agent.xp + 100,
+        previousCapabilities: agent.capabilities || [],
+        newCapabilities: [...(agent.capabilities || []), ...nextTier.superpowers],
+        previousLLM: agent.llmConfig?.model || 'Unknown',
+        newLLM: nextTier.llmUpgrade,
+        previousVoice: evolutionInfo.currentTier?.voiceCapabilities || [],
+        newVoice: nextTier.voiceCapabilities,
+        dmtCost: nextTier.dmtRequired,
+        evolutionStage: avatarResult.evolutionStage.name,
+        agentType: agent.type,
+        reason: `${agent.type === 'master' ? 'Master Agent' : 'Sub-Agent'} upgraded to ${nextTier.llmUpgrade} with ${nextTier.superpowers.join(', ')} capabilities`,
+        tierDescription: nextTier.description,
+        
+        // Visual evolution details
+        visualEvolution: {
+          previousAvatar: agent.avatar,
+          newAvatar: avatarResult.newAvatarPath,
+          evolutionStage: avatarResult.evolutionStage,
+          visualEffects: avatarResult.visualEffects,
+          rarity: avatarResult.rarity
+        },
+        
+        // NFT metadata details
+        nftUpdate: {
+          success: metadataResult.success,
+          transactionSignature: metadataResult.transactionSignature,
+          metadataUri: metadataResult.metadataUri,
+          error: metadataResult.error
+        },
+        
+        // Rarity details
+        rarityDetails: {
+          previousRarity: this.getCurrentRarity(agent),
+          newRarity: rarityResult.rarity,
+          rarityScore: rarityResult.score,
+          rarityFactors: rarityResult.factors,
+          preservation: rarityResult.preservation
+        },
+        
+        // Individual configuration updates
+        newLLMConfig: {
+          model: nextTier.llmUpgrade,
+          version: this.getLLMVersion(nextTier.llmUpgrade),
+          temperature: this.getLLMTemperature(nextTier.llmUpgrade),
+          maxTokens: this.getLLMMaxTokens(nextTier.llmUpgrade),
+          contextWindow: this.getLLMContextWindow(nextTier.llmUpgrade)
+        },
+        newRAGConfig: {
+          dataSource: this.generateUniqueDataSource(agent.id!, agent.domain, nextTier.level),
+          vectorDB: `vector_db_${agent.id}_${nextTier.level}`,
+          ipfsHash: this.generateIPFSHash(agent.id!, nextTier.level),
+          knowledgeBase: this.generateKnowledgeBase(agent.domain, nextTier.level),
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      // Update agent with new configuration
+      const evolutionHistoryEntry = {
+        timestamp: new Date().toISOString(),
+        previousLevel: evolutionDetails.previousLevel,
+        newLevel: evolutionDetails.newLevel,
+        dmtSpent: evolutionDetails.dmtCost,
+        llmUpgrade: evolutionDetails.newLLM,
+        newSuperpowers: nextTier.superpowers,
+        reason: evolutionDetails.reason,
+        visualEvolution: evolutionDetails.visualEvolution,
+        nftUpdate: evolutionDetails.nftUpdate,
+        rarityDetails: evolutionDetails.rarityDetails
+      };
+
+      const updateData: any = {
+        level: evolutionDetails.newLevel,
+        xp: evolutionDetails.newXP,
+        capabilities: evolutionDetails.newCapabilities,
+        evolutionStage: evolutionDetails.evolutionStage,
+        avatar: avatarResult.newAvatarPath, // Update avatar path
+        llmConfig: evolutionDetails.newLLMConfig,
+        ragConfig: evolutionDetails.newRAGConfig,
+        evolutionHistory: [...(agent.evolutionHistory || []), evolutionHistoryEntry],
+        individualStats: {
+          totalUpgrades: (agent.individualStats?.totalUpgrades || 0) + 1,
+          totalDmtSpent: (agent.individualStats?.totalDmtSpent || 0) + evolutionDetails.dmtCost,
+          uniqueConversations: agent.individualStats?.uniqueConversations || 0,
+          domainExpertise: Math.min((agent.individualStats?.domainExpertise || 0) + 10, 100),
+          lastActive: new Date().toISOString()
+        },
+        'metadata.lastEvolved': new Date().toISOString(),
+        'metadata.evolutionReason': evolutionDetails.reason,
+        'metadata.visualEvolution': evolutionDetails.visualEvolution,
+        'metadata.nftUpdate': evolutionDetails.nftUpdate,
+        'metadata.rarityDetails': evolutionDetails.rarityDetails,
+        'performance.tasksCompleted': (agent.performance?.tasksCompleted || 0) + 1
+      };
+
+      // Only add type if it's defined
+      if (agent.type) {
+        updateData.type = agent.type;
+      }
+
+      // Update in database
+      if (db) {
+        try {
+          await updateDoc(doc(db, 'agents', agent.id!), updateData);
+          console.log('Agent evolved successfully in database');
+        } catch (firebaseError) {
+          console.log('Firebase evolution failed, updating local cache only:', firebaseError);
+        }
+      }
+      
+      // Always update local cache
+      const index = this.agents.findIndex(a => a.id === agent.id);
+      if (index !== -1) {
+        this.agents[index] = { ...this.agents[index], ...updateData };
+        console.log('Agent evolved successfully in local cache');
+      }
+
+      // Burn upgrade fee
+      const burnResult = await BurningService.burnUpgradeFee(userId, evolutionDetails.dmtCost, agentId);
+      if (!burnResult.success) {
+        return { 
+          success: false, 
+          error: `Failed to process upgrade burning: ${burnResult.error}` 
+        };
+      }
+
+      // Use subscription credits
+      await SubscriptionService.useCredits(userId, 2);
+
+      // Save evolution transaction
+      if (db) {
+        const evolutionRef = collection(db, 'agentEvolutions');
+        await addDoc(evolutionRef, {
+          agentId: agent.id,
+          agentName: agent.name,
+          userId,
+          dmtSpent: evolutionDetails.dmtCost,
+          burnedAmount: burnResult.burnedAmount,
+          evolutionDetails,
+          timestamp: new Date().toISOString(),
+          transactionType: 'VISUAL_EVOLUTION'
+        });
+      }
+
+      console.log('Agent evolved successfully with visual updates:', evolutionDetails);
+      return { success: true, evolutionDetails };
+    } catch (error) {
+      console.error('Failed to evolve agent with visuals:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  }
+
+  /**
+   * Get current rarity for agent (helper method)
+   */
+  private getCurrentRarity(agent: Agent): any {
+    // This would typically fetch from the agent's metadata
+    // For now, return a basic rarity based on level
+    if (agent.level >= 20) return { name: 'legendary', multiplier: 3.0 };
+    if (agent.level >= 15) return { name: 'epic', multiplier: 2.0 };
+    if (agent.level >= 10) return { name: 'rare', multiplier: 1.5 };
+    return { name: 'common', multiplier: 1.0 };
   }
 }
 

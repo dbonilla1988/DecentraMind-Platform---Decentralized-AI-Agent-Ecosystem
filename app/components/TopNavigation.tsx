@@ -40,7 +40,8 @@ import {
   Menu,
   ChevronDown,
   ArrowRight,
-  Calendar
+  Calendar,
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -88,6 +89,20 @@ const navigationConfig = [
         href: '/ai-agents/marketplace',
         description: 'Buy and sell AI agents securely',
         icon: Store,
+      },
+      {
+        title: 'Crypto Alpha Assistant',
+        href: '/crypto-alpha',
+        description: 'Discover and evaluate promising crypto tokens',
+        icon: TrendingUp,
+        badge: 'Alpha',
+      },
+      {
+        title: 'Test Workflows',
+        href: '/test-workflows',
+        description: 'Simulate AI agent workflows and test capabilities',
+        icon: Zap,
+        badge: 'Test',
       },
     ],
   },
@@ -315,6 +330,13 @@ const navigationConfig = [
       },
     ],
   },
+  {
+    title: 'Admin',
+    href: '/admin',
+    icon: Settings,
+    description: 'System Administration',
+    items: [],
+  },
 ];
 
 // Status bar items
@@ -476,7 +498,10 @@ export default function TopNavigation() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard" className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105">
+            <Link
+              href="/dashboard"
+              className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105"
+            >
               <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-xl flex items-center justify-center border border-cyan-400/30 shadow-lg shadow-cyan-400/25 group-hover:shadow-cyan-400/40 transition-all duration-300">
                 <Sparkles className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
               </div>
@@ -491,14 +516,29 @@ export default function TopNavigation() {
             </Link>
           </div>
 
+          {/* Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search agents, features, or help..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-lg bg-zinc-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300"
+              />
+            </div>
+          </div>
+
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
             <NavigationMenu>
               <NavigationMenuList>
                 {/* Dashboard Link */}
                 <NavigationMenuItem>
-                  <Link href="/dashboard" legacyBehavior passHref>
-                    <NavigationMenuLink
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/dashboard"
                       className={cn(
                         "group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-all duration-200",
                         pathname === '/dashboard' 
@@ -510,8 +550,8 @@ export default function TopNavigation() {
                         <BarChart3 className="w-4 h-4" />
                         <span>Dashboard</span>
                       </div>
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
 
                 {/* Main Navigation Items */}

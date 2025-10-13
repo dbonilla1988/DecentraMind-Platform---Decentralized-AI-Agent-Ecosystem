@@ -33,6 +33,7 @@ export interface TaskTemplate {
 export class TaskService {
   private tasks: Task[] = [];
   private taskTemplates: TaskTemplate[] = [
+    // General Templates
     {
       id: 'chat-basic',
       name: 'Basic Chat Interaction',
@@ -92,6 +93,132 @@ export class TaskService {
       dmtCost: 10,
       estimatedDuration: 60,
       requirements: { minLevel: 5, capabilities: ['Custom fine-tuned intelligence', 'Real-time collaboration'] }
+    },
+
+    // Finance Domain Templates
+    {
+      id: 'financial-analysis',
+      name: 'Financial Analysis',
+      description: 'Analyze financial data and provide investment insights',
+      type: 'analysis',
+      xpReward: 60,
+      dmtCost: 6,
+      estimatedDuration: 35,
+      requirements: { minLevel: 3, capabilities: ['Financial Analysis', 'Portfolio Management'] }
+    },
+    {
+      id: 'portfolio-optimization',
+      name: 'Portfolio Optimization',
+      description: 'Optimize investment portfolio based on risk tolerance',
+      type: 'analysis',
+      xpReward: 80,
+      dmtCost: 8,
+      estimatedDuration: 40,
+      requirements: { minLevel: 4, capabilities: ['Portfolio Management', 'Risk Assessment'] }
+    },
+    {
+      id: 'market-research',
+      name: 'Market Research',
+      description: 'Research market trends and provide trading recommendations',
+      type: 'research',
+      xpReward: 70,
+      dmtCost: 7,
+      estimatedDuration: 45,
+      requirements: { minLevel: 3, capabilities: ['Financial Analysis', 'Market Research'] }
+    },
+    {
+      id: 'budget-planning',
+      name: 'Budget Planning',
+      description: 'Create comprehensive budget plans and financial forecasts',
+      type: 'analysis',
+      xpReward: 45,
+      dmtCost: 5,
+      estimatedDuration: 25,
+      requirements: { minLevel: 2, capabilities: ['Financial Analysis'] }
+    },
+
+    // Health & Wellness Domain Templates
+    {
+      id: 'health-assessment',
+      name: 'Health Assessment',
+      description: 'Analyze health data and provide wellness recommendations',
+      type: 'analysis',
+      xpReward: 55,
+      dmtCost: 6,
+      estimatedDuration: 30,
+      requirements: { minLevel: 3, capabilities: ['Health Monitoring', 'Wellness Planning'] }
+    },
+    {
+      id: 'nutrition-planning',
+      name: 'Nutrition Planning',
+      description: 'Create personalized nutrition plans and meal recommendations',
+      type: 'analysis',
+      xpReward: 40,
+      dmtCost: 4,
+      estimatedDuration: 25,
+      requirements: { minLevel: 2, capabilities: ['Nutrition Guidance'] }
+    },
+    {
+      id: 'fitness-routine',
+      name: 'Fitness Routine',
+      description: 'Design personalized workout routines and fitness plans',
+      type: 'analysis',
+      xpReward: 35,
+      dmtCost: 4,
+      estimatedDuration: 20,
+      requirements: { minLevel: 2, capabilities: ['Wellness Planning'] }
+    },
+    {
+      id: 'wellness-coaching',
+      name: 'Wellness Coaching',
+      description: 'Provide personalized wellness coaching and lifestyle advice',
+      type: 'chat',
+      xpReward: 25,
+      dmtCost: 3,
+      estimatedDuration: 15,
+      requirements: { minLevel: 2, capabilities: ['Health Monitoring', 'Wellness Planning'] }
+    },
+
+    // Crypto Domain Templates
+    {
+      id: 'crypto-analysis',
+      name: 'Crypto Market Analysis',
+      description: 'Analyze cryptocurrency markets and provide trading insights',
+      type: 'analysis',
+      xpReward: 70,
+      dmtCost: 7,
+      estimatedDuration: 35,
+      requirements: { minLevel: 4, capabilities: ['Crypto Analysis', 'Trading Strategies'] }
+    },
+    {
+      id: 'defi-research',
+      name: 'DeFi Research',
+      description: 'Research DeFi protocols and provide yield farming strategies',
+      type: 'research',
+      xpReward: 85,
+      dmtCost: 9,
+      estimatedDuration: 50,
+      requirements: { minLevel: 5, capabilities: ['Crypto Analysis', 'Market Research'] }
+    },
+    {
+      id: 'nft-analysis',
+      name: 'NFT Analysis',
+      description: 'Analyze NFT collections and provide investment recommendations',
+      type: 'analysis',
+      xpReward: 60,
+      dmtCost: 6,
+      estimatedDuration: 30,
+      requirements: { minLevel: 3, capabilities: ['Crypto Analysis'] }
+    },
+    {
+      id: 'trading-strategy',
+      name: 'Trading Strategy',
+      description: 'Develop automated trading strategies and risk management plans',
+      type: 'automation',
+      xpReward: 90,
+      dmtCost: 10,
+      estimatedDuration: 60,
+      requirements: { minLevel: 5, capabilities: ['Trading Strategies', 'Market Research'] }
     }
   ];
 
@@ -103,11 +230,25 @@ export class TaskService {
   // Get task templates available for an agent
   getAvailableTaskTemplates(agentLevel: number, agentCapabilities: string[]): TaskTemplate[] {
     console.log('Getting templates for level:', agentLevel, 'capabilities:', agentCapabilities);
-    // For now, return all templates that match the agent level
-    // TODO: Implement proper capability matching
-    const availableTemplates = this.taskTemplates.filter(template => 
-      template.requirements.minLevel <= agentLevel
-    );
+    
+    // Filter templates based on level and capabilities
+    const availableTemplates = this.taskTemplates.filter(template => {
+      // Check level requirement
+      if (template.requirements.minLevel > agentLevel) {
+        return false;
+      }
+      
+      // Check capability requirements (at least one capability must match)
+      const hasRequiredCapability = template.requirements.capabilities.some(requiredCap => 
+        agentCapabilities.some(agentCap => 
+          agentCap.toLowerCase().includes(requiredCap.toLowerCase()) ||
+          requiredCap.toLowerCase().includes(agentCap.toLowerCase())
+        )
+      );
+      
+      return hasRequiredCapability;
+    });
+    
     console.log('Available templates:', availableTemplates);
     return availableTemplates;
   }

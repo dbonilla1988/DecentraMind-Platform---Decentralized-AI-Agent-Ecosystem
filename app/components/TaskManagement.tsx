@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -94,28 +94,26 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ selectedAgent, onTaskCo
 
   useEffect(() => {
     if (selectedAgent) {
-      console.log('Loading tasks for agent:', selectedAgent);
       const tasks = taskService.getAgentTasks(selectedAgent.id);
       const templates = taskService.getAvailableTaskTemplates(selectedAgent.level, selectedAgent.capabilities);
-      console.log('Loaded tasks:', tasks);
-      console.log('Loaded templates:', templates);
       setTasks(tasks);
       setTaskTemplates(templates);
+    } else {
+      // Clear data when no agent is selected
+      setTasks([]);
+      setTaskTemplates([]);
     }
   }, [selectedAgent]);
 
   // Debug log for modal state
   useEffect(() => {
-    console.log('Modal state changed:', createTaskOpen);
   }, [createTaskOpen]);
 
-  const handleCreateTask = () => {
+  const handleCreateTask = useCallback(() => {
     if (!selectedAgent || !selectedTemplate) return;
 
     try {
-      console.log('Creating task with:', { selectedAgent, selectedTemplate, customDescription });
       const newTask = taskService.createTask(selectedAgent.id, selectedTemplate, customDescription);
-      console.log('Task created:', newTask);
       setTasks(prev => [...prev, newTask]);
       setCreateTaskOpen(false);
       setSelectedTemplate('');
@@ -123,10 +121,10 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ selectedAgent, onTaskCo
     } catch (error) {
       console.error('Failed to create task:', error);
     }
-  };
+  }, [selectedAgent, selectedTemplate, customDescription]);
 
-  const handleExecuteTask = async (taskId: string) => {
-    if (!selectedAgent) return;
+  const handleExecuteTask = useCallback(async (taskId: string) => {
+    if (!selectedAgent || executingTasks.has(taskId)) return;
 
     setExecutingTasks(prev => new Set(prev).add(taskId));
     
@@ -146,7 +144,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ selectedAgent, onTaskCo
         return newSet;
       });
     }
-  };
+  }, [selectedAgent, executingTasks, onTaskCompleted]);
 
   const getTaskIcon = (type: Task['type']) => {
     switch (type) {
@@ -180,12 +178,10 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ selectedAgent, onTaskCo
     }
   };
 
-  const getTaskStats = () => {
+  const stats = useMemo(() => {
     if (!selectedAgent) return null;
     return taskService.getTaskStats(selectedAgent.id);
-  };
-
-  const stats = getTaskStats();
+  }, [selectedAgent, tasks]);
 
   if (!selectedAgent) {
     return (
@@ -272,7 +268,6 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ selectedAgent, onTaskCo
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => {
-              console.log('Create Task button clicked, opening modal');
               setCreateTaskOpen(true);
             }}
             sx={{ bgcolor: '#00ffff', color: 'black' }}
@@ -442,7 +437,6 @@ const TaskManagement: React.FC<TaskManagementProps> = ({ selectedAgent, onTaskCo
       <Dialog 
         open={createTaskOpen} 
         onClose={() => {
-          console.log('Modal closing');
           setCreateTaskOpen(false);
         }} 
         maxWidth="md" 

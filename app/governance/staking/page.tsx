@@ -1,9 +1,6 @@
+import StakingDashboard from '../../components/StakingDashboard';
+
 export default function StakingPage() {
-  return (
-    <div className="text-white p-10">
-      <h1 className="text-3xl font-bold text-cyan-300 mb-4">Staking & Rewards</h1>
-      <p className="text-gray-400 text-lg">Stake tokens and earn rewards</p>
-    </div>
-  );
+  return <StakingDashboard />;
 }
 

@@ -197,12 +197,16 @@ const EvolutionTracker = () => {
   };
 
   const getSpiralPosition = (index: number, total: number) => {
-    const angle = (index / total) * Math.PI * 2;
-    const radius = 120 + (index * 20);
-    return {
-      x: Math.cos(angle) * radius,
-      y: Math.sin(angle) * radius,
-    };
+    // Predetermined positions to avoid hydration errors
+    const positions = [
+      { x: 0, y: -120 },      // Level 1 - top
+      { x: 85, y: -85 },      // Level 2 - top-right
+      { x: 120, y: 0 },       // Level 3 - right
+      { x: 85, y: 85 },       // Level 4 - bottom-right
+      { x: 0, y: 120 },       // Level 5 - bottom
+    ];
+    
+    return positions[index] || { x: 0, y: 0 };
   };
 
   return (
@@ -443,3 +447,5 @@ const EvolutionTracker = () => {
 };
 
 export default EvolutionTracker;
+
+

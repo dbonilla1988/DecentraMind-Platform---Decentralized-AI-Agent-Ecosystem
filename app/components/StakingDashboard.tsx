@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -618,4 +620,6 @@ export const StakingDashboard: React.FC = () => {
       </Dialog>
     </Box>
   );
-}; 
+};
+
+export default StakingDashboard; 

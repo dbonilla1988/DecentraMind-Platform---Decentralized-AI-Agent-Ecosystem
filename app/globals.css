@@ -252,6 +252,10 @@ body::before {
     animation: rotate 2s linear infinite;
 }
 
+.animate-spin-slow {
+    animation: rotate 3s linear infinite;
+}
+
 .shimmer {
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
     background-size: 200px 100%;

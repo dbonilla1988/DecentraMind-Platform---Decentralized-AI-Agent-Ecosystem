@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 import { userTierService, UserTier } from '../services/userTierService';
 import { tokenIntegrationService, TokenBalance } from '../services/tokenIntegrationService';
-import { daoService, Proposal } from '../services/daoService';
+import daoService, { Proposal } from '../services/daoService';
 import { rewardsService, UserRewards, Badge as RewardBadge } from '../services/rewardsService';
 
 interface EconomicDashboardProps {
@@ -91,8 +91,9 @@ const EconomicDashboard: React.FC<EconomicDashboardProps> = ({ userId, userProfi
     setUserRewards(rewards);
 
     // Load DAO proposals
-    const daoProposals = daoService.getAllProposals();
-    setProposals(daoProposals);
+    daoService.getProposals((daoProposals) => {
+      setProposals(daoProposals);
+    });
 
     // Load badges
     const userBadges = rewardsService.getUserBadges(userId);
@@ -441,7 +442,7 @@ const EconomicDashboard: React.FC<EconomicDashboardProps> = ({ userId, userProfi
                                   color="error" 
                                 />
                                 <Chip 
-                                  label={`Quorum: ${proposal.quorum}/${proposal.requiredQuorum}`} 
+                                  label={`Quorum: ${proposal.quorum}/${proposal.quorum}`} 
                                   size="small" 
                                   color="info" 
                                 />

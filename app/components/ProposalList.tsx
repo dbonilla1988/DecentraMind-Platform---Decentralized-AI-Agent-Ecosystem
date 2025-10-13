@@ -50,9 +50,13 @@ import {
   ThumbUp as ThumbUpIcon,
   ThumbDown as ThumbDownIcon,
 } from '@mui/icons-material';
-import { daoService, Proposal, ProposalStatus, ProposalType, Vote } from '../services/daoService';
+import daoService, { Proposal, Vote } from '../services/daoService';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from './ToastNotifications';
+
+// Local type definitions
+type ProposalStatus = 'active' | 'passed' | 'rejected' | 'executed' | 'draft';
+type ProposalType = 'treasury' | 'governance' | 'tech' | 'community' | 'feature' | 'agent' | 'upgrade';
 
 interface ProposalListProps {
   onProposalClick?: (proposalId: string) => void;
@@ -148,7 +152,12 @@ export const ProposalList: React.FC<ProposalListProps> = ({
         type = typeFilter;
       }
 
-      const proposalsData = daoService.getAllProposals();
+      const proposalsData = await new Promise<Proposal[]>((resolve) => {
+        const unsubscribe = daoService.getProposals((proposals) => {
+          resolve(proposals);
+          unsubscribe();
+        });
+      });
       
       // Apply search filter
       let filteredProposals = proposalsData;
@@ -165,20 +174,20 @@ export const ProposalList: React.FC<ProposalListProps> = ({
         
         switch (sortBy) {
           case 'createdAt':
-            aValue = new Date(a.createdAt).getTime();
-            bValue = new Date(b.createdAt).getTime();
+            aValue = a.createdAt.toDate().getTime();
+            bValue = b.createdAt.toDate().getTime();
             break;
           case 'votingEnd':
-            aValue = new Date(a.votingEnd).getTime();
-            bValue = new Date(b.votingEnd).getTime();
+            aValue = a.deadline.toDate().getTime();
+            bValue = b.deadline.toDate().getTime();
             break;
           case 'totalVotes':
-            aValue = a.totalVotes;
-            bValue = b.totalVotes;
+            aValue = a.votes.total;
+            bValue = b.votes.total;
             break;
           default:
-            aValue = new Date(a.createdAt).getTime();
-            bValue = new Date(b.createdAt).getTime();
+            aValue = a.createdAt.toDate().getTime();
+            bValue = b.createdAt.toDate().getTime();
         }
 
         return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
@@ -202,7 +211,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
 
     setVotingLoading(true);
     try {
-      await daoService.castVote(proposalId, session.walletAddress, vote, { dmt: 1000, dmtx: 50 });
+      await daoService.castVote(proposalId, vote as 'for' | 'against' | 'abstain', session.walletAddress, 1000);
       showSuccess('Vote cast successfully!');
       setShowVoteDialog(false);
       setSelectedProposal(null);
@@ -357,7 +366,6 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           </Button>
         )}
       </Box>
-
       {/* Filters */}
       <Card sx={{ mb: 3, background: 'rgba(25, 25, 25, 0.9)', border: '2px solid #00ffff' }}>
         <CardContent>
@@ -438,21 +446,18 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           </Grid>
         </CardContent>
       </Card>
-
       {/* Loading State */}
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
       )}
-
       {/* Error State */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
-
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
         <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ color: '#00ffff' }}>
@@ -463,7 +468,6 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           <Tab label="Failed" />
         </Tabs>
       </Box>
-
       {/* Proposals List */}
       <Grid container spacing={3}>
         {proposals.map((proposal) => (
@@ -489,10 +493,10 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                     
                     <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                       <Chip
-                        label={proposal.type.replace(/([A-Z])/g, ' $1').trim()}
+                        label={proposal.category.replace(/([A-Z])/g, ' $1').trim()}
                         size="small"
                         sx={{ 
-                          background: getTypeColor(proposal.type),
+                          background: getTypeColor(proposal.category),
                           color: 'white',
                           fontWeight: 'bold'
                         }}
@@ -507,20 +511,13 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                           fontWeight: 'bold'
                         }}
                       />
-                      {proposal.executionData?.funding && proposal.executionData.funding > 0 && (
-                        <Chip
-                          label={`${proposal.executionData.funding.toLocaleString()} DMT`}
-                          size="small"
-                          sx={{ background: '#ffc107', color: 'black', fontWeight: 'bold' }}
-                        />
-                      )}
                     </Box>
                   </Box>
                   
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Tooltip title="View Details">
                       <IconButton
-                        onClick={() => onProposalClick?.(proposal.id)}
+                        onClick={() => proposal.id && onProposalClick?.(proposal.id)}
                         sx={{ color: '#00ffff' }}
                       >
                         <ViewIcon />
@@ -547,7 +544,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                         Vote Progress
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {formatTimeRemaining(proposal.votingEnd.toISOString())}
+                        {formatTimeRemaining(proposal.deadline.toDate().toISOString())}
                       </Typography>
                     </Box>
                     <LinearProgress
@@ -579,10 +576,10 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                 {/* Proposal Stats */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="caption" color="text.secondary">
-                    Created by {proposal.proposer.slice(0, 8)}...{proposal.proposer.slice(-6)}
+                    Created by {proposal.createdBy.slice(0, 8)}...{proposal.createdBy.slice(-6)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(proposal.createdAt).toLocaleDateString()}
+                    {proposal.createdAt.toDate().toLocaleDateString()}
                   </Typography>
                 </Box>
               </CardContent>
@@ -590,7 +587,6 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           </Grid>
         ))}
       </Grid>
-
       {/* Empty State */}
       {!loading && proposals.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -602,7 +598,6 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           </Typography>
         </Box>
       )}
-
       {/* Pagination */}
       {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
@@ -622,7 +617,6 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           />
         </Box>
       )}
-
       {/* Vote Dialog */}
       <Dialog open={showVoteDialog} onClose={() => setShowVoteDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
@@ -651,7 +645,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                 <Button
                   variant="contained"
-                  onClick={() => handleVote(selectedProposal.id, 'for')}
+                  onClick={() => selectedProposal?.id && handleVote(selectedProposal.id, 'for')}
                   disabled={votingLoading}
                   sx={{ 
                     background: getVoteButtonColor('for'),
@@ -664,7 +658,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                 </Button>
                 <Button
                   variant="contained"
-                  onClick={() => handleVote(selectedProposal.id, 'against')}
+                  onClick={() => selectedProposal?.id && handleVote(selectedProposal.id, 'against')}
                   disabled={votingLoading}
                   sx={{ 
                     background: getVoteButtonColor('against'),
@@ -677,7 +671,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({
                 </Button>
                 <Button
                   variant="contained"
-                  onClick={() => handleVote(selectedProposal.id, 'abstain')}
+                  onClick={() => selectedProposal?.id && handleVote(selectedProposal.id, 'abstain')}
                   disabled={votingLoading}
                   sx={{ 
                     background: getVoteButtonColor('abstain'),

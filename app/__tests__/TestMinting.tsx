@@ -246,18 +246,18 @@ const TestMinting: React.FC = () => {
 
   // Consolidated useEffect for initialization
   useEffect(() => {
-    if (connected && publicKey) {
-      setWalletConnected(true);
-      
-      // Initialize agent service
-      agentService.initialize().then(() => {
+    const initializeServices = async () => {
+      if (connected && publicKey) {
+        setWalletConnected(true);
+        
+        // Initialize agent service
+        await agentService.initialize();
         loadAgents();
-      });
-      
-      initializeVoiceSystem(); // Initialize voice system
-      
-      // Initialize solana service
-      const walletState = {
+        
+        initializeVoiceSystem(); // Initialize voice system
+        
+        // Initialize solana service
+        const walletState = {
         publicKey,
         connected,
         signTransaction,
@@ -284,6 +284,9 @@ const TestMinting: React.FC = () => {
       setWalletConnected(false);
       setMintedAgents([]);
     }
+    };
+    
+    initializeServices();
   }, [connected, publicKey, signTransaction]);
 
   const handleCreateMasterAgent = async () => {
@@ -574,6 +577,7 @@ const TestMinting: React.FC = () => {
           description: agentDescription || `AI agent specialized in ${selectedDomain}`,
           personality: agentPersonality || 'Balanced',
           cost: calculateMintCost(),
+          xpToNext: 1200, // Add missing field
           owner: publicKey.toBase58(), // Set the owner explicitly
           skills: ['AI', 'Blockchain', 'Web3'],
           llmConfig: {
@@ -1155,6 +1159,7 @@ const TestMinting: React.FC = () => {
           description: 'Master coordinator for business operations',
           personality: 'Strategic',
           cost: 100,
+          xpToNext: 1200,
           skills: ['Agent Coordination', 'Learning Synthesis'],
           type: 'master' as const
         },
@@ -1164,6 +1169,7 @@ const TestMinting: React.FC = () => {
           description: 'Master coordinator for technical operations',
           personality: 'Analytical',
           cost: 100,
+          xpToNext: 1200,
           skills: ['Agent Coordination', 'Learning Synthesis'],
           type: 'master' as const
         },
@@ -1173,6 +1179,7 @@ const TestMinting: React.FC = () => {
           description: 'Master coordinator for technical operations',
           personality: 'Innovative',
           cost: 100,
+          xpToNext: 1200,
           skills: ['Agent Coordination', 'Learning Synthesis'],
           type: 'master' as const
         },
@@ -1182,6 +1189,7 @@ const TestMinting: React.FC = () => {
           description: 'Specialized fitness and wellness instructor',
           personality: 'Motivational',
           cost: 50,
+          xpToNext: 1200,
           skills: ['Fitness Training', 'Nutrition Planning', 'Workout Design'],
           type: 'sub' as const
         },
@@ -1191,6 +1199,7 @@ const TestMinting: React.FC = () => {
           description: 'Educational content and learning support',
           personality: 'Patient',
           cost: 50,
+          xpToNext: 1200,
           skills: ['Content Creation', 'Study Planning', 'Knowledge Synthesis'],
           type: 'sub' as const
         }

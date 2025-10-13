@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Typography,
@@ -11,7 +12,6 @@ import {
   Tab,
   Alert,
   Snackbar,
-  Fade,
   Zoom,
   Dialog,
   DialogTitle,
@@ -22,6 +22,17 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Card,
+  CardContent,
+  Avatar,
+  LinearProgress,
+  IconButton,
+  Tooltip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
 } from '@mui/material';
 import {
   Psychology as PsychologyIcon,
@@ -32,33 +43,54 @@ import {
   FilterList as FilterIcon,
   ViewModule as GridIcon,
   ViewList as ListIcon,
+  AccountBalanceWallet as FinanceIcon,
+  Favorite as HealthIcon,
+  ShowChart as CryptoIcon,
+  Dashboard as DashboardIcon,
+  PlayArrow as RunTaskIcon,
+  Upgrade as UpgradeIcon,
+  Visibility as VisibilityIcon,
+  Settings as SettingsIcon,
+  Timeline as TimelineIcon,
+  EmojiEvents as TrophyIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import AgentCard from './AgentCard';
 import AgentUpgradeModal from './AgentUpgradeModal';
 import TaskManagement from './TaskManagement';
 import { AgentUpgradeTier, getAgentTier } from '../utils/agentUpgradeUtils';
+import agentService from '../services/agentService';
 
 interface Agent {
   id: string;
   name: string;
   xp: number;
   level: number;
+  xpToNext: number;
   tasksCompleted: number;
   usageCount: number;
   specialization: string;
   status: 'active' | 'idle' | 'training';
   lastActive: string;
-  type: 'Master' | 'Sub-Agent';
+  type: 'master' | 'sub';
   domain: string;
   personality: string;
   description: string;
   avatar: string;
   specializations: string[];
+  capabilities: string[];
+  performance: {
+    tasksCompleted: number;
+    successRate: number;
+    averageResponseTime: number;
+    totalEarnings: number;
+  };
   parentAgent?: number;
   subAgents?: number[];
 }
 
 const AgentManagement: React.FC = () => {
+  const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -67,6 +99,8 @@ const AgentManagement: React.FC = () => {
   const [userBalance, setUserBalance] = useState({ dmt: 1000, dmtx: 50 });
   const [showTaskManagement, setShowTaskManagement] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showXPEvolutionModal, setShowXPEvolutionModal] = useState(false);
+  const [selectedAgentForXP, setSelectedAgentForXP] = useState<Agent | null>(null);
 
   // Task modal fields state
   const [assignedAgent, setAssignedAgent] = useState('');
@@ -74,101 +108,271 @@ const AgentManagement: React.FC = () => {
   const [taskName, setTaskName] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
 
-  // Enhanced agents data with upgrade system integration
-  const [agents, setAgents] = useState<Agent[]>([
-    {
-      id: '1',
-      name: 'Master Agent',
-      type: 'Master',
-      domain: 'Orchestration',
-      personality: 'Strategic',
-      level: 5,
-      xp: 7500,
-      tasksCompleted: 500,
-      usageCount: 2500,
-      status: 'active',
-      lastActive: '2 minutes ago',
-      description: 'Coordinates all sub-agents and manages overall strategy',
-      avatar: '/master-agent.png',
-      specialization: 'Leadership',
-      specializations: ['Leadership', 'Coordination', 'Strategy'],
-      subAgents: [2, 3, 4],
-    },
-    {
-      id: '2',
-      name: 'Language Agent',
-      type: 'Sub-Agent',
-      domain: 'Learning',
-      personality: 'Educational',
-      level: 2,
-      xp: 750,
-      tasksCompleted: 35,
-      usageCount: 150,
-      status: 'idle',
-      lastActive: '1 hour ago',
-      description: 'Specializes in language learning and communication',
-      avatar: '/sub-agent-1.png',
-      specialization: 'German',
-      specializations: ['German', 'Spanish', 'French'],
-      parentAgent: 1,
-    },
-    {
-      id: '3',
-      name: 'Productivity Agent',
-      type: 'Sub-Agent',
-      domain: 'Productivity',
-      personality: 'Efficient',
-      level: 3,
-      xp: 1800,
-      tasksCompleted: 120,
-      usageCount: 600,
-      status: 'active',
-      lastActive: '5 minutes ago',
-      description: 'Manages tasks, scheduling, and productivity optimization',
-      avatar: '/sub-agent-2.png',
-      specialization: 'Task Management',
-      specializations: ['Task Management', 'Time Optimization', 'Goal Setting'],
-      parentAgent: 1,
-    },
-    {
-      id: '4',
-      name: 'Creative Agent',
-      type: 'Sub-Agent',
-      domain: 'Creative',
-      personality: 'Innovative',
-      level: 1,
-      xp: 200,
-      tasksCompleted: 15,
-      usageCount: 75,
-      status: 'training',
-      lastActive: '30 minutes ago',
-      description: 'Generates creative ideas and artistic content',
-      avatar: '/sub-agent-2.png',
-      specialization: 'Design',
-      specializations: ['Design', 'Writing', 'Art'],
-      parentAgent: 1,
-    },
-    {
-      id: '5',
-      name: 'Technical Agent',
-      type: 'Sub-Agent',
-      domain: 'Technical',
-      personality: 'Analytical',
-      level: 4,
-      xp: 4000,
-      tasksCompleted: 280,
-      usageCount: 1200,
-      status: 'active',
-      lastActive: '1 minute ago',
-      description: 'Handles technical tasks and code generation',
-      avatar: '/sub-agent-3.png',
-      specialization: 'Coding',
-      specializations: ['Coding', 'Debugging', 'Architecture'],
-      parentAgent: 1,
-    },
-  ]);
+  // Load agents from agentService
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(false); // Start with false to show the button immediately
 
-  const [filteredAgents, setFilteredAgents] = useState<Agent[]>(agents);
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([]);
+
+  // Load agents from agentService
+  useEffect(() => {
+    const loadAgents = () => {
+      try {
+        setLoading(true);
+        
+        // Use synchronous method directly
+        const agentData = agentService.getAgentsSync();
+        
+        // No mock agents - start with clean slate
+        if (false) {
+          const mockAgents = [
+            {
+              id: 'agent-cfo',
+              name: 'CFO Agent',
+              domain: 'Finance',
+              description: 'Advanced financial analysis and portfolio management',
+              personality: 'Analytical',
+              cost: 100,
+              xp: 2500,
+              level: 3,
+              xpToNext: 800,
+              mintDate: new Date().toISOString(),
+              owner: 'user-wallet-address',
+              status: 'active' as const,
+              type: 'master' as const,
+              skills: ['Financial Analysis', 'Portfolio Management', 'Risk Assessment'],
+              avatar: '/avatars/agent-cfo.png',
+              performance: {
+                tasksCompleted: 45,
+                successRate: 92,
+                averageResponseTime: 1.2,
+                totalEarnings: 1250
+              },
+              metadata: {
+                model: 'GPT-4',
+                version: '4.0',
+                lastUpdated: new Date().toISOString()
+              },
+              capabilities: ['Financial Analysis', 'Portfolio Management'],
+              evolutionStage: 'Apprentice',
+              llmConfig: {
+                model: 'GPT-4',
+                version: '4.0',
+                temperature: 0.7,
+                maxTokens: 4096,
+                contextWindow: 4096
+              },
+              ragConfig: {
+                dataSource: 'financial-data',
+                vectorDB: 'pinecone',
+                knowledgeBase: ['Financial markets', 'Investment strategies'],
+                lastUpdated: new Date().toISOString()
+              },
+              evolutionHistory: [],
+              individualStats: {
+                totalUpgrades: 2,
+                totalDmtSpent: 200,
+                uniqueConversations: 15,
+                domainExpertise: 75,
+                lastActive: new Date().toISOString()
+              }
+            },
+            {
+              id: 'agent-care',
+              name: 'Care Agent',
+              domain: 'Health & Wellness',
+              description: 'Personalized health and wellness guidance',
+              personality: 'Compassionate',
+              cost: 80,
+              xp: 4800,
+              level: 5,
+              xpToNext: 200,
+              mintDate: new Date().toISOString(),
+              owner: 'user-wallet-address',
+              status: 'active' as const,
+              type: 'sub' as const,
+              skills: ['Health Monitoring', 'Wellness Planning', 'Nutrition Guidance'],
+              avatar: '/avatars/agent-care.png',
+              performance: {
+                tasksCompleted: 78,
+                successRate: 96,
+                averageResponseTime: 0.8,
+                totalEarnings: 2100
+              },
+              metadata: {
+                model: 'GPT-3.5',
+                version: '3.5-turbo',
+                lastUpdated: new Date().toISOString()
+              },
+              capabilities: ['Health Monitoring', 'Wellness Planning'],
+              evolutionStage: 'Advanced',
+              llmConfig: {
+                model: 'GPT-3.5',
+                version: '3.5-turbo',
+                temperature: 0.6,
+                maxTokens: 2048,
+                contextWindow: 2048
+              },
+              ragConfig: {
+                dataSource: 'health-data',
+                vectorDB: 'pinecone',
+                knowledgeBase: ['Health guidelines', 'Nutrition facts'],
+                lastUpdated: new Date().toISOString()
+              },
+              evolutionHistory: [],
+              individualStats: {
+                totalUpgrades: 3,
+                totalDmtSpent: 350,
+                uniqueConversations: 28,
+                domainExpertise: 85,
+                lastActive: new Date().toISOString()
+              }
+            },
+            {
+              id: 'agent-crypto',
+              name: 'Crypto Alpha Agent',
+              domain: 'Crypto',
+              description: 'Advanced cryptocurrency analysis and trading insights',
+              personality: 'Strategic',
+              cost: 150,
+              xp: 12000,
+              level: 12,
+              xpToNext: 800,
+              mintDate: new Date().toISOString(),
+              owner: 'user-wallet-address',
+              status: 'active' as const,
+              type: 'master' as const,
+              skills: ['Crypto Analysis', 'Trading Strategies', 'Market Research'],
+              avatar: '/avatars/agent-crypto.png',
+              performance: {
+                tasksCompleted: 156,
+                successRate: 94,
+                averageResponseTime: 0.5,
+                totalEarnings: 4500
+              },
+              metadata: {
+                model: 'GPT-4',
+                version: '4.0',
+                lastUpdated: new Date().toISOString()
+              },
+              capabilities: ['Crypto Analysis', 'Trading Strategies'],
+              evolutionStage: 'Expert',
+              llmConfig: {
+                model: 'GPT-4',
+                version: '4.0',
+                temperature: 0.5,
+                maxTokens: 4096,
+                contextWindow: 4096
+              },
+              ragConfig: {
+                dataSource: 'crypto-data',
+                vectorDB: 'pinecone',
+                knowledgeBase: ['Crypto markets', 'Trading strategies'],
+                lastUpdated: new Date().toISOString()
+              },
+              evolutionHistory: [],
+              individualStats: {
+                totalUpgrades: 5,
+                totalDmtSpent: 750,
+                uniqueConversations: 42,
+                domainExpertise: 95,
+                lastActive: new Date().toISOString()
+              }
+            }
+          ];
+          
+          // Transform mock agents to match our interface
+          const transformedMockAgents: Agent[] = mockAgents.map(agent => ({
+            id: agent.id,
+            name: agent.name,
+            xp: agent.xp,
+            level: agent.level,
+            xpToNext: agent.xpToNext,
+            tasksCompleted: agent.performance.tasksCompleted,
+            usageCount: agent.performance.totalEarnings * 10,
+            status: agent.status,
+            lastActive: agent.metadata?.lastUpdated ? 
+              new Date(agent.metadata.lastUpdated).toLocaleString() : 'Unknown',
+            type: agent.type,
+            domain: agent.domain,
+            personality: agent.personality,
+            description: agent.description,
+            avatar: agent.avatar,
+            specialization: agent.skills[0] || 'General',
+            specializations: agent.skills,
+            capabilities: agent.capabilities,
+            performance: agent.performance,
+          }));
+          
+          setAgents(transformedMockAgents);
+          setFilteredAgents(transformedMockAgents);
+        } else {
+          // Transform agentService data to match our interface
+          const transformedAgents: Agent[] = agentData.map(agent => ({
+            id: agent.id || '',
+            name: agent.name,
+            xp: agent.xp,
+            level: agent.level,
+            xpToNext: agent.xpToNext || 0,
+            tasksCompleted: agent.performance.tasksCompleted,
+            usageCount: agent.performance.totalEarnings * 10, // Estimate usage from earnings
+            status: agent.status === 'inactive' ? 'idle' : agent.status,
+            lastActive: agent.metadata?.lastUpdated ? 
+              new Date(agent.metadata.lastUpdated).toLocaleString() : 'Unknown',
+            type: agent.type || 'master',
+            domain: agent.domain,
+            personality: agent.personality,
+            description: agent.description,
+            avatar: getAgentAvatar(agent.id || ''),
+            specialization: agent.skills[0] || 'General',
+            specializations: agent.skills,
+            capabilities: agent.capabilities || [],
+            performance: agent.performance,
+          }));
+          
+          setAgents(transformedAgents);
+          setFilteredAgents(transformedAgents);
+        }
+      } catch (error) {
+        console.error('Failed to load agents:', error);
+        setSnackbar({ open: true, message: 'Failed to load agents', severity: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAgents();
+  }, []);
+
+  // Helper function to get agent avatar
+  const getAgentAvatar = (agentId: string): string => {
+    const avatarMap: Record<string, string> = {
+      'agent-cfo': '/autonomous-cfo.png',
+      'agent-care': '/care-orchestrator.png',
+      'agent-crypto': '/crypto-alpha.png',
+    };
+    return avatarMap[agentId] || '/default-agent.png';
+  };
+
+  // Helper function to get agent icon
+  const getAgentIcon = (agentId: string) => {
+    const iconMap: Record<string, React.ComponentType> = {
+      'agent-cfo': FinanceIcon,
+      'agent-care': HealthIcon,
+      'agent-crypto': CryptoIcon,
+    };
+    return iconMap[agentId] || PsychologyIcon;
+  };
+
+  // Helper function to get domain label with emoji
+  const getDomainLabel = (domain: string): string => {
+    const domainMap: Record<string, string> = {
+      'Finance': '💰 Finance',
+      'Health': '❤️ Health',
+      'Crypto': '📊 Crypto',
+    };
+    return domainMap[domain] || domain;
+  };
 
   useEffect(() => {
     setFilteredAgents(agents);
@@ -182,17 +386,14 @@ const AgentManagement: React.FC = () => {
       case 0: // All Agents
         setFilteredAgents(agents);
         break;
-      case 1: // Master Agents
-        setFilteredAgents(agents.filter(agent => agent.type === 'Master'));
+      case 1: // Finance
+        setFilteredAgents(agents.filter(agent => agent.domain === 'Finance'));
         break;
-      case 2: // Sub-Agents
-        setFilteredAgents(agents.filter(agent => agent.type === 'Sub-Agent'));
+      case 2: // Health
+        setFilteredAgents(agents.filter(agent => agent.domain === 'Health'));
         break;
-      case 3: // Upgradeable
-        setFilteredAgents(agents.filter(agent => {
-          const tier = getAgentTier(agent.level);
-          return tier && agent.level < 5;
-        }));
+      case 3: // Crypto
+        setFilteredAgents(agents.filter(agent => agent.domain === 'Crypto'));
         break;
       default:
         setFilteredAgents(agents);
@@ -264,6 +465,110 @@ const AgentManagement: React.FC = () => {
   const handleManageTasks = (agent: Agent) => {
     setSelectedAgent(agent);
     setShowTaskManagement(true);
+  };
+
+  const handleShowXPEvolution = (agent: Agent) => {
+    setSelectedAgentForXP(agent);
+    setShowXPEvolutionModal(true);
+  };
+
+  const handleVisualEvolution = async (agent: Agent) => {
+    try {
+      // Import the enhanced AgentService
+      const AgentService = (await import('../services/agentService')).default;
+      
+      // Show loading state
+      setSnackbar({ 
+        open: true, 
+        message: `Starting visual evolution for ${agent.name}...`, 
+        severity: 'info' 
+      });
+
+      // Call the new visual evolution method
+      const result = await AgentService.evolveAgentWithVisuals(
+        'user-wallet-address', // TODO: Get actual wallet address
+        agent.id!,
+        100 // DMT amount for evolution
+      );
+
+      if (result.success) {
+        setSnackbar({ 
+          open: true, 
+          message: `🎉 ${agent.name} evolved successfully! New avatar and visual effects applied.`, 
+          severity: 'success' 
+        });
+        
+        // Update the agent in the local state
+        setAgents(prev => prev.map(a => 
+          a.id === agent.id 
+            ? { 
+                ...a, 
+                level: result.evolutionDetails.newLevel,
+                xp: result.evolutionDetails.newXP,
+                avatar: result.evolutionDetails.visualEvolution.newAvatar,
+                evolutionStage: result.evolutionDetails.evolutionStage
+              }
+            : a
+        ));
+      } else {
+        setSnackbar({ 
+          open: true, 
+          message: `Evolution failed: ${result.error}`, 
+          severity: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error('Visual evolution error:', error);
+      setSnackbar({ 
+        open: true, 
+        message: 'Failed to evolve agent. Please try again.', 
+        severity: 'error' 
+      });
+    }
+  };
+
+  const handleTaskDelegation = async (agentId: string, taskName: string) => {
+    try {
+      // Show initial snackbar
+      setSnackbar({ 
+        open: true, 
+        message: `Task sent to agent: Preparing response...`, 
+        severity: 'info' 
+      });
+
+      // Simulate async task processing
+      setTimeout(() => {
+        setSnackbar({ 
+          open: true, 
+          message: `Task completed by agent! +10 XP earned`, 
+          severity: 'success' 
+        });
+        
+        // Update agent XP
+        setAgents(prevAgents => 
+          prevAgents.map(agent => 
+            agent.id === agentId 
+              ? { 
+                  ...agent, 
+                  xp: agent.xp + 10,
+                  tasksCompleted: agent.tasksCompleted + 1,
+                  performance: {
+                    ...agent.performance,
+                    tasksCompleted: agent.performance.tasksCompleted + 1,
+                    totalEarnings: agent.performance.totalEarnings + 1
+                  }
+                }
+              : agent
+          )
+        );
+      }, 2000);
+    } catch (error) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Failed to delegate task', 
+        severity: 'error' 
+      });
+    }
   };
 
   const getTierStats = () => {
@@ -394,7 +699,7 @@ const AgentManagement: React.FC = () => {
                         label={agent.type} 
                         size="small" 
                         sx={{ 
-                          bgcolor: agent.type === 'Master' ? '#ff9800' : '#4caf50',
+                          bgcolor: agent.type === 'master' ? '#ff9800' : '#4caf50',
                           color: 'white',
                           fontSize: '0.7rem'
                         }} 
@@ -469,7 +774,8 @@ const AgentManagement: React.FC = () => {
           </Button>
           <Button
             onClick={() => {
-              console.log('Task Created:', {
+              // Create task logic would go here
+              console.log('Creating task:', {
                 taskName,
                 taskDescription,
                 assignedAgent,
@@ -501,10 +807,10 @@ const AgentManagement: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" sx={{ color: '#00ffff', mb: 2, fontWeight: 'bold' }}>
-          🤖 Agent Management
+          🤖 Your Agents
         </Typography>
         <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 3 }}>
-          Manage, upgrade, and monitor your AI agents
+          Manage your AI agents and track their performance
         </Typography>
 
         {/* Stats Overview */}
@@ -545,9 +851,9 @@ const AgentManagement: React.FC = () => {
             }}
           >
             <Tab label="All Agents" />
-            <Tab label="Master Agents" />
-            <Tab label="Sub-Agents" />
-            <Tab label="Upgradeable" />
+            <Tab label="Finance" />
+            <Tab label="Health" />
+            <Tab label="Crypto" />
           </Tabs>
 
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -602,28 +908,191 @@ const AgentManagement: React.FC = () => {
       </Box>
 
       {/* Agents Grid/List */}
-      {filteredAgents.length === 0 ? (
+      {loading ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.5)', mb: 2 }}>
-            No agents found
+          <Typography variant="h6" sx={{ color: '#00ffff', mb: 2 }}>
+            Loading your agents...
+          </Typography>
+        </Box>
+      ) : filteredAgents.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          {/* Empty State Icon */}
+          <Box sx={{ mb: 4 }}>
+            <PsychologyIcon sx={{ fontSize: 80, color: 'rgba(0, 255, 255, 0.3)', mb: 2 }} />
+          </Box>
+          
+          {/* Empty State Title */}
+          <Typography variant="h4" sx={{ color: '#00ffff', mb: 2, fontWeight: 'bold' }}>
+            No Agents Found
+          </Typography>
+          
+          {/* Empty State Description */}
+          <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 4, maxWidth: '600px', mx: 'auto' }}>
+            You don't have any AI agents yet. Create your first agent to start automating tasks and earning rewards!
+          </Typography>
+          
+          {/* Action Buttons */}
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mb: 4 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => router.push('/ai-agents/mint')}
+              sx={{
+                bgcolor: '#00ffff',
+                color: 'black',
+                fontWeight: 'bold',
+                px: 4,
+                py: 1.5,
+                fontSize: '16px',
+                minHeight: '48px',
+                '&:hover': {
+                  bgcolor: '#00e5e5',
+                },
+              }}
+            >
+              Create Your First Agent
+            </Button>
+            
+            <Button
+              variant="outlined"
+              startIcon={<AutoAwesomeIcon />}
+              onClick={() => router.push('/ai-agents/marketplace')}
+              sx={{
+                borderColor: '#ff9800',
+                color: '#ff9800',
+                fontWeight: 'bold',
+                px: 4,
+                py: 1.5,
+                fontSize: '16px',
+                minHeight: '48px',
+                '&:hover': {
+                  borderColor: '#ffb74d',
+                  bgcolor: 'rgba(255, 152, 0, 0.1)',
+                },
+              }}
+            >
+              Browse Marketplace
+            </Button>
+          </Box>
+          
+          {/* Feature Highlights */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, 
+            gap: 3, 
+            maxWidth: '800px', 
+            mx: 'auto',
+            mt: 6
+          }}>
+            <Card sx={{ 
+              bgcolor: 'rgba(0, 255, 255, 0.05)', 
+              border: '1px solid rgba(0, 255, 255, 0.2)',
+              textAlign: 'center',
+              p: 2
+            }}>
+              <StarIcon sx={{ color: '#00ffff', fontSize: 40, mb: 1 }} />
+              <Typography variant="h6" sx={{ color: '#00ffff', mb: 1 }}>
+                AI-Powered
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Advanced AI agents that learn and evolve over time
+              </Typography>
+            </Card>
+            
+            <Card sx={{ 
+              bgcolor: 'rgba(76, 175, 80, 0.05)', 
+              border: '1px solid rgba(76, 175, 80, 0.2)',
+              textAlign: 'center',
+              p: 2
+            }}>
+              <TrendingUpIcon sx={{ color: '#4caf50', fontSize: 40, mb: 1 }} />
+              <Typography variant="h6" sx={{ color: '#4caf50', mb: 1 }}>
+                Earn Rewards
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Complete tasks and earn DMT tokens as rewards
+              </Typography>
+            </Card>
+            
+            <Card sx={{ 
+              bgcolor: 'rgba(255, 152, 0, 0.05)', 
+              border: '1px solid rgba(255, 152, 0, 0.2)',
+              textAlign: 'center',
+              p: 2
+            }}>
+              <TrophyIcon sx={{ color: '#ff9800', fontSize: 40, mb: 1 }} />
+              <Typography variant="h6" sx={{ color: '#ff9800', mb: 1 }}>
+                Level Up
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                Agents gain XP and unlock new capabilities
+              </Typography>
+            </Card>
+          </Box>
+          
+          {/* Help Text */}
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.5)', mt: 4 }}>
+            Need help getting started? Check out our{' '}
+            <Button
+              variant="text"
+              onClick={() => router.push('/learn/tutorials')}
+              sx={{ 
+                color: '#00ffff', 
+                textDecoration: 'underline',
+                p: 0,
+                minWidth: 'auto',
+                fontSize: 'inherit'
+              }}
+            >
+              tutorials
+            </Button>
+            {' '}or{' '}
+            <Button
+              variant="text"
+              onClick={() => router.push('/learn/agents')}
+              sx={{ 
+                color: '#00ffff', 
+                textDecoration: 'underline',
+                p: 0,
+                minWidth: 'auto',
+                fontSize: 'inherit'
+              }}
+            >
+              agent guide
+            </Button>
+            .
           </Typography>
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {filteredAgents.map((agent, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={agent.id}>
-              <Fade in timeout={300 + index * 100}>
-                <div>
-                  <AgentCard
-                    agent={agent}
-                    onUpgrade={handleUpgrade}
-                    onManageTasks={handleManageTasks}
-                    userBalance={userBalance}
-                  />
-                </div>
-              </Fade>
-            </Grid>
-          ))}
+          {filteredAgents.map((agent, index) => {
+            return (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={agent.id}>
+                <AgentCard
+                  agent={{
+                    id: agent.id,
+                    name: agent.name,
+                    xp: agent.xp,
+                    level: agent.level,
+                    tasksCompleted: agent.performance.tasksCompleted,
+                    usageCount: agent.performance.totalEarnings * 10,
+                    specialization: agent.specialization,
+                    status: agent.status,
+                    lastActive: agent.lastActive,
+                    tier: agent.type,
+                    xpToNext: agent.xpToNext,
+                    performance: agent.performance,
+                  }}
+                  onUpgrade={handleUpgrade}
+                  onManageTasks={handleManageTasks}
+                  onTaskCompleted={handleTaskCompleted}
+                  userBalance={userBalance}
+                  userProfile={undefined}
+                  showAccessControl={false}
+                />
+              </Grid>
+            );
+          })}
         </Grid>
       )}
 
@@ -681,6 +1150,135 @@ const AgentManagement: React.FC = () => {
           </DialogActions>
         </Dialog>
       )}
+
+      {/* XP Evolution Modal */}
+      <Dialog 
+        open={showXPEvolutionModal} 
+        onClose={() => setShowXPEvolutionModal(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(25, 25, 25, 0.95)',
+            color: 'white',
+            border: '2px solid #fdcb6e',
+            borderRadius: 2,
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          color: '#fdcb6e', 
+          borderBottom: '1px solid #fdcb6e',
+          fontSize: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}>
+          <TimelineIcon />
+          XP Evolution Log
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          {selectedAgentForXP && (
+            <Box>
+              {/* Agent Info */}
+              <Box display="flex" alignItems="center" mb={3}>
+                <Avatar sx={{ mr: 2, backgroundColor: 'rgba(253, 203, 110, 0.1)', border: '2px solid #fdcb6e' }}>
+                  {React.createElement(getAgentIcon(selectedAgentForXP.id))}
+                </Avatar>
+                <Box>
+                  <Typography variant="h5" sx={{ color: '#ffffff', fontWeight: 'bold' }}>
+                    {selectedAgentForXP.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#b0b0b0' }}>
+                    Level {selectedAgentForXP.level} • {selectedAgentForXP.xp} XP
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* XP Progress */}
+              <Box mb={3}>
+                <Typography variant="h6" sx={{ color: '#fdcb6e', mb: 1 }}>
+                  Progress to Next Level
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={Math.min(100, ((selectedAgentForXP.xp - (selectedAgentForXP.level - 1) * 1200) / 1200) * 100)}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: '#fdcb6e',
+                      borderRadius: 4
+                    }
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: '#b0b0b0', mt: 1 }}>
+                  {selectedAgentForXP.xpToNext > 0 ? `${selectedAgentForXP.xpToNext} XP to next level` : 'Max level reached'}
+                </Typography>
+              </Box>
+
+              {/* Evolution History */}
+              <Typography variant="h6" sx={{ color: '#fdcb6e', mb: 2 }}>
+                Evolution History
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemIcon>
+                    <TrophyIcon sx={{ color: '#fdcb6e' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Level 5 Achieved"
+                    secondary="Advanced financial analysis capabilities unlocked"
+                  />
+                </ListItem>
+                <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                <ListItem>
+                  <ListItemIcon>
+                    <CheckCircleIcon sx={{ color: '#2ed573' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="150 Tasks Completed"
+                    secondary="+10 XP per task • 98% success rate"
+                  />
+                </ListItem>
+                <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                <ListItem>
+                  <ListItemIcon>
+                    <StarIcon sx={{ color: '#00ffff' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Performance Bonus"
+                    secondary="High accuracy reward • +50 XP"
+                  />
+                </ListItem>
+                <Divider sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+                <ListItem>
+                  <ListItemIcon>
+                    <AutoAwesomeIcon sx={{ color: '#e84393' }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Specialization Upgrade"
+                    secondary="Advanced risk management module • +100 XP"
+                  />
+                </ListItem>
+              </List>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setShowXPEvolutionModal(false)}
+            sx={{ 
+              color: '#b0b0b0',
+              borderColor: '#b0b0b0',
+              '&:hover': { borderColor: '#ffffff', color: '#ffffff' }
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar */}
       <Snackbar

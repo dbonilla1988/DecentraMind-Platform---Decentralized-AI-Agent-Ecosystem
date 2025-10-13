@@ -1,9 +1,6 @@
+import AgentManagement from '../../components/AgentManagement';
+
 export default function AgentManagementPage() {
-  return (
-    <div className="text-white p-10">
-      <h1 className="text-3xl font-bold text-cyan-300 mb-4">Agent Management</h1>
-      <p className="text-gray-400 text-lg">Manage and interact with your AI agents</p>
-    </div>
-  );
+  return <AgentManagement />;
 }
 
