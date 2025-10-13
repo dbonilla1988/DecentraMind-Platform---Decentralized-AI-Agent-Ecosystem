@@ -108,30 +108,32 @@ const AIAgentNetworkMap = () => {
         </div>
 
         {/* Task Edges */}
-        {edges.map((edge) => {
-          const fromAgent = agents.find(a => a.id === edge.from);
-          const toAgent = agents.find(a => a.id === edge.to);
-          if (!fromAgent || !toAgent) return null;
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          {edges.map((edge) => {
+            const fromAgent = agents.find(a => a.id === edge.from);
+            const toAgent = agents.find(a => a.id === edge.to);
+            if (!fromAgent || !toAgent) return null;
 
-          return (
-            <motion.line
-              key={edge.id}
-              x1={`${fromAgent.x}%`}
-              y1={`${fromAgent.y}%`}
-              x2={`${toAgent.x}%`}
-              y2={`${toAgent.y}%`}
-              stroke={getEdgeColor(edge.status)}
-              strokeWidth="2"
-              opacity={hoveredEdge === edge.id ? 0.8 : 0.4}
-              className="cursor-pointer"
-              onMouseEnter={() => setHoveredEdge(edge.id)}
-              onMouseLeave={() => setHoveredEdge(null)}
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-            />
-          );
-        })}
+            return (
+              <motion.line
+                key={edge.id}
+                x1={`${fromAgent.x}%`}
+                y1={`${fromAgent.y}%`}
+                x2={`${toAgent.x}%`}
+                y2={`${toAgent.y}%`}
+                stroke={getEdgeColor(edge.status)}
+                strokeWidth="2"
+                opacity={hoveredEdge === edge.id ? 0.8 : 0.4}
+                className="cursor-pointer"
+                onMouseEnter={() => setHoveredEdge(edge.id)}
+                onMouseLeave={() => setHoveredEdge(null)}
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            );
+          })}
+        </svg>
 
         {/* Agent Nodes */}
         {agents.map((agent) => (

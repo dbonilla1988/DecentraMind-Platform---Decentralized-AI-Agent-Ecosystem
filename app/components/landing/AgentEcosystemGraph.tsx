@@ -253,29 +253,31 @@ const AgentEcosystemGraph = () => {
         </div>
 
         {/* Agent Connections */}
-        {agents.map(agent => 
-          agent.connections.map(connectionId => {
-            const connectedAgent = agents.find(a => a.id === connectionId);
-            if (!connectedAgent) return null;
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          {agents.map(agent => 
+            agent.connections.map(connectionId => {
+              const connectedAgent = agents.find(a => a.id === connectionId);
+              if (!connectedAgent) return null;
 
-            return (
-              <motion.line
-                key={`${agent.id}-${connectionId}`}
-                x1={`${agent.position.x}%`}
-                y1={`${agent.position.y}%`}
-                x2={`${connectedAgent.position.x}%`}
-                y2={`${connectedAgent.position.y}%`}
-                stroke="currentColor"
-                strokeWidth="1"
-                opacity="0.3"
-                className="text-slate-600"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
-              />
-            );
-          })
-        )}
+              return (
+                <motion.line
+                  key={`${agent.id}-${connectionId}`}
+                  x1={`${agent.position.x}%`}
+                  y1={`${agent.position.y}%`}
+                  x2={`${connectedAgent.position.x}%`}
+                  y2={`${connectedAgent.position.y}%`}
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  opacity="0.3"
+                  className="text-slate-600"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                />
+              );
+            })
+          )}
+        </svg>
 
         {/* Agent Nodes */}
         {agents.map((agent, index) => (

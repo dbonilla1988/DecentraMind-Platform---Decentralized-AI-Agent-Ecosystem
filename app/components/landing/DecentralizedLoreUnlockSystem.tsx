@@ -348,19 +348,21 @@ const DecentralizedLoreUnlockSystem = () => {
             </div>
 
             {/* Connection Lines to Center */}
-            <motion.line
-              x1="50%"
-              y1="50%"
-              x2={`${fragment.position.x}%`}
-              y2={`${fragment.position.y}%`}
-              stroke="currentColor"
-              strokeWidth="1"
-              opacity="0.3"
-              className="text-slate-600"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1, delay: index * 0.1 + 0.5 }}
-            />
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              <motion.line
+                x1="50%"
+                y1="50%"
+                x2={`${fragment.position.x}%`}
+                y2={`${fragment.position.y}%`}
+                stroke="currentColor"
+                strokeWidth="1"
+                opacity="0.3"
+                className="text-slate-600"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, delay: index * 0.1 + 0.5 }}
+              />
+            </svg>
           </motion.div>
         ))}
 

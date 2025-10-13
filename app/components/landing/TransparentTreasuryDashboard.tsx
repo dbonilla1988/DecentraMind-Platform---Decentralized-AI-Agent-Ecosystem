@@ -276,18 +276,20 @@ const TransparentTreasuryDashboard = () => {
               </div>
 
               {/* Connection Line */}
-              <motion.line
-                x1="50%"
-                y1="50%"
-                x2={`${x}%`}
-                y2={`${y}%`}
-                stroke={flow.type === 'inflow' ? '#10b981' : '#ef4444'}
-                strokeWidth="2"
-                opacity="0.6"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1, delay: index * 0.1 + 0.5 }}
-              />
+              <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                <motion.line
+                  x1="50%"
+                  y1="50%"
+                  x2={`${x}%`}
+                  y2={`${y}%`}
+                  stroke={flow.type === 'inflow' ? '#10b981' : '#ef4444'}
+                  strokeWidth="2"
+                  opacity="0.6"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1, delay: index * 0.1 + 0.5 }}
+                />
+              </svg>
 
               {/* Animated Flow Particles */}
               <motion.div
