@@ -33,6 +33,78 @@ export const useWallet = () => {
   return context;
 };
 
+// Toast notification system
+class ToastManager {
+  private static instance: ToastManager;
+  private toasts: HTMLElement[] = [];
+  private container: HTMLElement | null = null;
+
+  static getInstance(): ToastManager {
+    if (!ToastManager.instance) {
+      ToastManager.instance = new ToastManager();
+    }
+    return ToastManager.instance;
+  }
+
+  private createContainer(): HTMLElement {
+    if (!this.container) {
+      this.container = document.createElement('div');
+      this.container.className = 'fixed top-20 left-4 z-50 space-y-2 pointer-events-none';
+      this.container.style.maxWidth = '400px';
+      document.body.appendChild(this.container);
+    }
+    return this.container;
+  }
+
+  show(type: 'success' | 'error' | 'info', message: string) {
+    const container = this.createContainer();
+    
+    const toast = document.createElement('div');
+    toast.className = `px-4 py-3 rounded-lg shadow-lg transition-all duration-300 pointer-events-auto ${
+      type === 'success' ? 'bg-green-600 text-white border border-green-500' :
+      type === 'error' ? 'bg-red-600 text-white border border-red-500' :
+      'bg-blue-600 text-white border border-blue-500'
+    }`;
+    
+    toast.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <span class="text-sm font-medium">${message}</span>
+        <button class="ml-2 text-white/70 hover:text-white" onclick="this.parentElement.parentElement.remove()">
+          ✕
+        </button>
+      </div>
+    `;
+    
+    // Add to container
+    container.appendChild(toast);
+    this.toasts.push(toast);
+    
+    // Animate in
+    setTimeout(() => {
+      toast.style.transform = 'translateX(0)';
+      toast.style.opacity = '1';
+    }, 100);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+      this.removeToast(toast);
+    }, 4000);
+  }
+
+  private removeToast(toast: HTMLElement) {
+    if (toast && toast.parentElement) {
+      toast.style.transform = 'translateX(-100%)';
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.parentElement.removeChild(toast);
+        }
+        this.toasts = this.toasts.filter(t => t !== toast);
+      }, 300);
+    }
+  }
+}
+
 // Internal component that uses Solana wallet adapter
 const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { publicKey, connected, connect, disconnect, connecting, wallet } = useSolanaWallet();
@@ -61,11 +133,11 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         localStorage.setItem('decentramind_wallet_connected', 'true');
         
         // Show success toast
-        showToast('success', `✅ Wallet Connected: ${formatAddress(walletAddress)}`);
+        ToastManager.getInstance().show('success', `✅ Wallet Connected: ${formatAddress(walletAddress)}`);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to connect wallet');
-      showToast('error', `❌ Failed to connect wallet: ${err.message || 'Unknown error'}`);
+      ToastManager.getInstance().show('error', `❌ Failed to connect wallet: ${err.message || 'Unknown error'}`);
     }
   }, [connect, walletAddress]);
 
@@ -78,10 +150,10 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       localStorage.removeItem('decentramind_wallet_address');
       localStorage.removeItem('decentramind_wallet_connected');
       
-      showToast('info', '🔌 Wallet Disconnected');
+      ToastManager.getInstance().show('info', '🔌 Wallet Disconnected');
     } catch (err: any) {
       setError(err.message || 'Failed to disconnect wallet');
-      showToast('error', `❌ Failed to disconnect wallet: ${err.message || 'Unknown error'}`);
+      ToastManager.getInstance().show('error', `❌ Failed to disconnect wallet: ${err.message || 'Unknown error'}`);
     }
   }, [disconnect]);
 
@@ -90,9 +162,9 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (walletAddress) {
       try {
         await navigator.clipboard.writeText(walletAddress);
-        showToast('success', '📋 Address copied to clipboard');
+        ToastManager.getInstance().show('success', '📋 Address copied to clipboard');
       } catch (err) {
-        showToast('error', '❌ Failed to copy address');
+        ToastManager.getInstance().show('error', '❌ Failed to copy address');
       }
     }
   }, [walletAddress]);
@@ -117,7 +189,7 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Mint agent function
   const mintAgent = useCallback(async (agentType: string) => {
     if (!walletAddress) {
-      showToast('error', '❌ Please connect your wallet first');
+      ToastManager.getInstance().show('error', '❌ Please connect your wallet first');
       return;
     }
 
@@ -125,7 +197,7 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Check eligibility first
       const isEligible = await checkAgentMintEligibility(walletAddress);
       if (!isEligible) {
-        showToast('error', '❌ You have reached your agent mint limit (3 agents)');
+        ToastManager.getInstance().show('error', '❌ You have reached your agent mint limit (3 agents)');
         return;
       }
 
@@ -136,41 +208,12 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const currentCount = parseInt(localStorage.getItem(`minted_agents_${walletAddress}`) || '0');
       localStorage.setItem(`minted_agents_${walletAddress}`, (currentCount + 1).toString());
       
-      showToast('success', `🎉 Agent Minted Successfully to Wallet: ${shortAddress}`);
+      ToastManager.getInstance().show('success', `🎉 Agent Minted Successfully to Wallet: ${shortAddress}`);
       
     } catch (err: any) {
-      showToast('error', `❌ Failed to mint agent: ${err.message || 'Unknown error'}`);
+      ToastManager.getInstance().show('error', `❌ Failed to mint agent: ${err.message || 'Unknown error'}`);
     }
   }, [walletAddress, shortAddress, checkAgentMintEligibility]);
-
-  // Toast notification function
-  const showToast = (type: 'success' | 'error' | 'info', message: string) => {
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
-      type === 'success' ? 'bg-green-600 text-white' :
-      type === 'error' ? 'bg-red-600 text-white' :
-      'bg-blue-600 text-white'
-    }`;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    // Animate in
-    setTimeout(() => {
-      toast.style.transform = 'translateX(0)';
-      toast.style.opacity = '1';
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      toast.style.opacity = '0';
-      setTimeout(() => {
-        document.body.removeChild(toast);
-      }, 300);
-    }, 3000);
-  };
 
   const value: WalletContextType = {
     isConnected,
