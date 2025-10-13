@@ -29,10 +29,10 @@ const WalletStatus = () => {
   if (!isConnected) return null;
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <motion.button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-emerald-600/20 to-green-600/20 border border-emerald-500/30 rounded-lg backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300"
+        className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-emerald-600/20 to-green-600/20 border border-emerald-500/30 rounded-lg backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300 whitespace-nowrap"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         animate={{
