@@ -49,6 +49,30 @@ const DecentralizedFeaturesShowcase = () => {
           </motion.p>
         </div>
 
+        {/* Quick Connect Wallet CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
+        >
+          <motion.button
+            onClick={() => {
+              console.log('Connecting wallet from showcase...');
+              window.open('/ai-agents/mint', '_blank');
+            }}
+            className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-xl font-bold text-white transition-all duration-300 shadow-lg shadow-emerald-500/25"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="flex items-center">
+              <span className="mr-2">👛</span>
+              Connect Wallet to Explore
+            </span>
+          </motion.button>
+        </motion.div>
+
         {/* Tab Navigation */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -158,30 +182,44 @@ const DecentralizedFeaturesShowcase = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mt-16"
+          className="text-center mt-8"
         >
-          <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-purple-500/30">
-            <h3 className="text-2xl font-bold text-white mb-4">
+          <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-6 border border-purple-500/30">
+            <h3 className="text-xl font-bold text-white mb-3">
               Ready to Experience Decentralized AI?
             </h3>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
+            <p className="text-gray-300 mb-4 max-w-2xl mx-auto text-sm">
               Join the DecentraMind ecosystem and become part of the future of autonomous AI agents, 
               decentralized governance, and transparent intelligence.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <motion.button
-                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-bold text-white transition-all duration-300"
+                onClick={() => {
+                  console.log('Connecting wallet from bottom CTA...');
+                  window.open('/ai-agents/mint', '_blank');
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-lg font-bold text-white transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Connect Wallet
+                <span className="flex items-center justify-center">
+                  <span className="mr-2">👛</span>
+                  Connect Wallet
+                </span>
               </motion.button>
               <motion.button
-                className="px-8 py-3 border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 rounded-lg font-bold text-white transition-all duration-300"
+                onClick={() => {
+                  console.log('Exploring dashboard...');
+                  window.open('/dashboard', '_blank');
+                }}
+                className="px-6 py-3 border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 rounded-lg font-bold text-white transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Explore Dashboard
+                <span className="flex items-center justify-center">
+                  <span className="mr-2">📊</span>
+                  Explore Dashboard
+                </span>
               </motion.button>
             </div>
           </div>
