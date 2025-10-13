@@ -4,23 +4,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import NatureOverlays from './NatureOverlays';
-import ConnectWalletButton from '../ConnectWalletButton';
-import WalletModal from '../WalletModal';
 import { useWallet } from '../../providers/WalletContext';
 
 const HeroSection = () => {
   const router = useRouter();
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { isConnected, mintAgent } = useWallet();
+  const { mintAgent } = useWallet();
 
   const handleMintAgent = async () => {
-    if (!isConnected) {
-      setShowWalletModal(true);
-      return;
-    }
-    
     try {
       await mintAgent('autonomous-cfo');
     } catch (error) {
@@ -343,14 +335,6 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="flex flex-col sm:flex-row gap-8 justify-center items-center mb-20"
         >
-          {/* Connect Wallet Button - Primary CTA */}
-          <ConnectWalletButton
-            variant="primary"
-            size="lg"
-            className="px-12 py-6 rounded-2xl text-xl"
-            showStatus={true}
-            onWalletModalOpen={() => setShowWalletModal(true)}
-          />
           <motion.button
             onClick={handleMintAgent}
             className="group relative px-12 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-2xl font-bold text-xl transition-all duration-300 overflow-hidden shadow-2xl shadow-purple-500/25"
@@ -463,11 +447,6 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Wallet Modal */}
-      <WalletModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-      />
     </section>
   );
 };
