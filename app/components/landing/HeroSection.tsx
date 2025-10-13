@@ -225,105 +225,65 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* Animated Logo with Cosmic Background */}
+        {/* Enhanced Hero Content */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="flex justify-center mb-12"
+          className="mb-12"
         >
-          <motion.div
-            className="relative"
-            animate={{
-              scale: [1, 1.05, 1],
-              rotate: [0, 2, 0, -2, 0],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {/* Cosmic background rings */}
-            <div className="absolute inset-0 -m-8">
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute inset-0 border-2 border-blue-400/30 rounded-full"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.6, 0.3],
-                    rotate: [0, 360],
-                  }}
-                  transition={{
-                    duration: 8 + i * 2,
-                    repeat: Infinity,
-                    delay: i * 1,
-                  }}
-                  style={{
-                    transform: `scale(${1 + i * 0.3})`,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Central logo container */}
-            <motion.div
-              className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 border border-blue-400/30 backdrop-blur-sm"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-              animate={{
-                boxShadow: [
-                  "0 0 20px rgba(59, 130, 246, 0.3)",
-                  "0 0 40px rgba(59, 130, 246, 0.5)",
-                  "0 0 20px rgba(59, 130, 246, 0.3)",
-                ],
-              }}
-            >
-              <img 
-                src="/logo.svg" 
-                alt="DecentraMind Labs Logo" 
-                className="w-64 h-36 sm:w-72 sm:h-40 lg:w-80 lg:h-44"
+          {/* Floating AI Elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-4 h-4 bg-gradient-to-r from-cyan-400/40 to-purple-400/40 rounded-full"
+                style={{
+                  left: `${10 + i * 12}%`,
+                  top: `${20 + (i % 3) * 25}%`,
+                }}
+                animate={{
+                  y: [0, -30, 0],
+                  opacity: [0.4, 0.8, 0.4],
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 180, 360],
+                }}
+                transition={{
+                  duration: 4 + i * 0.5,
+                  repeat: Infinity,
+                  delay: i * 0.6,
+                }}
               />
-              
-              {/* Floating particles around logo */}
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-2 h-2 bg-blue-400 rounded-full"
-                  style={{
-                    left: `${20 + i * 12}%`,
-                    top: `${15 + (i % 2) * 70}%`,
-                  }}
-                  animate={{
-                    y: [0, -20, 0],
-                    opacity: [0.4, 1, 0.4],
-                    scale: [1, 1.5, 1],
-                  }}
-                  transition={{
-                    duration: 3 + i * 0.5,
-                    repeat: Infinity,
-                    delay: i * 0.8,
-                  }}
-                />
-              ))}
-            </motion.div>
-          </motion.div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Main headline */}
+        {/* Enhanced Main headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-tight text-center mb-6"
+          className="text-5xl sm:text-6xl lg:text-8xl font-bold leading-tight text-center mb-8"
         >
-          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
-            DecentraMind
-          </span>
-          <br />
           <motion.span
-            className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+            className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent block mb-2"
+            animate={{
+              textShadow: [
+                "0 0 20px rgba(139, 92, 246, 0.5)",
+                "0 0 40px rgba(139, 92, 246, 0.8)",
+                "0 0 20px rgba(139, 92, 246, 0.5)",
+              ],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            DecentraMind
+          </motion.span>
+          <motion.span
+            className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent block mb-4"
             animate={{
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
             }}
@@ -338,9 +298,8 @@ const HeroSection = () => {
           >
             Labs
           </motion.span>
-          <br />
           <motion.span
-            className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-emerald-300 mt-4 block"
+            className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-emerald-300 mt-6 block"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
@@ -350,28 +309,41 @@ const HeroSection = () => {
         </motion.h1>
 
 
-        {/* Description */}
+        {/* Enhanced Description */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="text-lg sm:text-xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+          className="text-xl sm:text-2xl text-gray-300 mb-16 max-w-5xl mx-auto leading-relaxed"
         >
-          Empowering users through tokenized intelligence, decentralized governance, and self-evolving agents.
+          <span className="text-cyan-400 font-semibold">Empowering users</span> through{' '}
+          <span className="text-purple-400 font-semibold">tokenized intelligence</span>,{' '}
+          <span className="text-emerald-400 font-semibold">decentralized governance</span>, and{' '}
+          <span className="text-pink-400 font-semibold">self-evolving agents</span>.
         </motion.p>
 
-        {/* CTA Buttons */}
+        {/* Enhanced CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16"
+          className="flex flex-col sm:flex-row gap-8 justify-center items-center mb-20"
         >
           <motion.button
             onClick={handleMintAgent}
-            className="group relative px-10 py-5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-2xl font-semibold text-lg transition-all duration-300 overflow-hidden"
-            whileHover={{ scale: 1.05 }}
+            className="group relative px-12 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-2xl font-bold text-xl transition-all duration-300 overflow-hidden shadow-2xl shadow-purple-500/25"
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
+            animate={{
+              boxShadow: [
+                "0 10px 30px rgba(147, 51, 234, 0.3)",
+                "0 20px 40px rgba(147, 51, 234, 0.5)",
+                "0 10px 30px rgba(147, 51, 234, 0.3)",
+              ],
+            }}
+            transition={{
+              boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+            }}
           >
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
@@ -379,21 +351,27 @@ const HeroSection = () => {
               whileHover={{ x: '100%' }}
               transition={{ duration: 0.6 }}
             />
-            <span className="relative z-10">Mint Your Agent</span>
+            <span className="relative z-10 flex items-center">
+              <span className="mr-3">🤖</span>
+              Mint Your Agent
+            </span>
             <motion.div
-              className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full"
-              animate={{ scale: [1, 1.2, 1] }}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center"
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
               transition={{ duration: 2, repeat: Infinity }}
-            />
+            >
+              <span className="text-xs">✨</span>
+            </motion.div>
           </motion.button>
 
           <motion.button
             onClick={handleLaunchDemo}
-            className="group px-10 py-5 border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 rounded-2xl font-semibold text-lg transition-all duration-300 backdrop-blur-sm"
-            whileHover={{ scale: 1.05 }}
+            className="group px-12 py-6 border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 rounded-2xl font-bold text-xl transition-all duration-300 backdrop-blur-sm shadow-xl shadow-purple-500/10"
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            <span className="group-hover:text-purple-300 transition-colors">
+            <span className="group-hover:text-purple-300 transition-colors flex items-center">
+              <span className="mr-3">🚀</span>
               Launch MVP Demo
             </span>
           </motion.button>

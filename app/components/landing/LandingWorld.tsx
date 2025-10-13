@@ -56,7 +56,8 @@ const LandingWorld = () => {
             <div className="hidden md:flex items-center space-x-6">
               {[
                 { name: "Dashboard", href: "/dashboard" },
-                { name: "Agents", href: "/ai-agents/management" },
+                { name: "Agent Workflows", href: "/workflows" },
+                { name: "Agent Management", href: "/agents" },
                 { name: "Health Portal", href: "/care/insights" },
                 { name: "Governance", href: "/governance" },
               ].map((item, index) => (
