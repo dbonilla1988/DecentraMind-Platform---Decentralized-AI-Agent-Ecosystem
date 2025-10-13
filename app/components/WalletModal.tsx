@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '../providers/WalletContext';
+import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -10,42 +12,8 @@ interface WalletModalProps {
 }
 
 const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
-  const { connectWallet, isLoading } = useWallet();
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
-
-  const wallets = [
-    {
-      id: 'phantom',
-      name: 'Phantom',
-      icon: '👻',
-      description: 'The most popular Solana wallet',
-      recommended: true,
-    },
-    {
-      id: 'solflare',
-      name: 'Solflare',
-      icon: '☀️',
-      description: 'Secure and user-friendly',
-    },
-    {
-      id: 'backpack',
-      name: 'Backpack',
-      icon: '🎒',
-      description: 'Built for traders and developers',
-    },
-    {
-      id: 'glow',
-      name: 'Glow',
-      icon: '✨',
-      description: 'Lightweight and fast',
-    },
-  ];
-
-  const handleWalletSelect = async (walletId: string) => {
-    setSelectedWallet(walletId);
-    await connectWallet();
-    onClose();
-  };
+  const { isLoading } = useWallet();
+  const { wallets } = useSolanaWallet();
 
   if (!isOpen) return null;
 
@@ -67,7 +35,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Choose Your Wallet</h2>
+            <h2 className="text-2xl font-bold text-white">Connect Your Wallet</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
@@ -80,46 +48,31 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
             Select a wallet to connect to DecentraMind and start minting AI agents
           </p>
 
-          <div className="space-y-3">
-            {wallets.map((wallet) => (
-              <motion.button
-                key={wallet.id}
-                onClick={() => handleWalletSelect(wallet.id)}
-                disabled={isLoading}
-                className={`
-                  w-full p-4 rounded-xl border transition-all duration-300 text-left
-                  ${wallet.recommended 
-                    ? 'border-purple-500/50 bg-purple-500/10 hover:border-purple-400/70 hover:bg-purple-500/20' 
-                    : 'border-slate-600/50 bg-slate-700/20 hover:border-slate-500/70 hover:bg-slate-600/30'
-                  }
-                  ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                `}
-                whileHover={!isLoading ? { scale: 1.02 } : {}}
-                whileTap={!isLoading ? { scale: 0.98 } : {}}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="text-3xl">{wallet.icon}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-bold text-white">{wallet.name}</h3>
-                      {wallet.recommended && (
-                        <span className="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300">
-                          Recommended
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-400">{wallet.description}</p>
-                  </div>
-                  {isLoading && selectedWallet === wallet.id && (
-                    <motion.div
-                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          <div className="space-y-4">
+            {/* Use the official Solana wallet adapter button */}
+            <div className="flex justify-center">
+              <WalletMultiButton className="!bg-gradient-to-r !from-purple-600 !to-blue-600 hover:!from-purple-700 hover:!to-blue-700 !rounded-xl !font-bold !transition-all !duration-300" />
+            </div>
+
+            {/* Show available wallets */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-gray-400 text-center">Available Wallets</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {wallets.map((wallet) => (
+                  <div
+                    key={wallet.adapter.name}
+                    className="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg"
+                  >
+                    <img
+                      src={wallet.adapter.icon}
+                      alt={wallet.adapter.name}
+                      className="w-6 h-6"
                     />
-                  )}
-                </div>
-              </motion.button>
-            ))}
+                    <span className="text-sm text-white">{wallet.adapter.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 p-4 bg-slate-800/50 rounded-xl">

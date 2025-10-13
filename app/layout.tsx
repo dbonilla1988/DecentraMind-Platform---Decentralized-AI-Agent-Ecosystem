@@ -4,6 +4,7 @@ import './globals.css';
 import { WalletProvider } from './providers/WalletProvider';
 import { ReduxProvider } from './providers/ReduxProvider';
 import { ToastProvider } from './components/ToastNotifications';
+// import { ThemeProvider } from './providers/ThemeProvider';
 
 const inter = Inter({
   subsets: ['latin'],

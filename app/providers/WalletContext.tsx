@@ -1,6 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { ConnectionProvider, WalletProvider as SolanaWalletProvider, useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { PhantomWalletAdapter, SolflareWalletAdapter, BackpackWalletAdapter, GlowWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl } from '@solana/web3.js';
+
+// Import wallet adapter CSS
+import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface WalletContextType {
   isConnected: boolean;
@@ -25,15 +33,9 @@ export const useWallet = () => {
   return context;
 };
 
-interface WalletProviderProps {
-  children: React.ReactNode;
-}
-
-export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [shortAddress, setShortAddress] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+// Internal component that uses Solana wallet adapter
+const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { publicKey, connected, connect, disconnect, connecting, wallet } = useSolanaWallet();
   const [error, setError] = useState<string | null>(null);
 
   // Format wallet address for display
@@ -42,62 +44,46 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
-  // Load wallet state from localStorage on mount
-  useEffect(() => {
-    const savedWallet = localStorage.getItem('decentramind_wallet_address');
-    const savedConnection = localStorage.getItem('decentramind_wallet_connected');
-    
-    if (savedWallet && savedConnection === 'true') {
-      setWalletAddress(savedWallet);
-      setShortAddress(formatAddress(savedWallet));
-      setIsConnected(true);
-    }
-  }, []);
+  const walletAddress = publicKey?.toString() || null;
+  const shortAddress = walletAddress ? formatAddress(walletAddress) : null;
+  const isConnected = connected;
+  const isLoading = connecting;
 
   // Connect wallet function
   const connectWallet = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      // Simulate wallet connection (replace with actual wallet adapter)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setError(null);
+      await connect();
       
-      // Mock wallet address (replace with actual wallet address)
-      const mockAddress = '3sdP9weT8kL2mN4qR7vX1yZ6hJ5cB8nM3pQ9sA2dF4gH7jK';
-      
-      setWalletAddress(mockAddress);
-      setShortAddress(formatAddress(mockAddress));
-      setIsConnected(true);
-      
-      // Save to localStorage
-      localStorage.setItem('decentramind_wallet_address', mockAddress);
-      localStorage.setItem('decentramind_wallet_connected', 'true');
-      
-      // Show success toast
-      showToast('success', `✅ Wallet Connected: ${formatAddress(mockAddress)}`);
-      
-    } catch (err) {
-      setError('Failed to connect wallet');
-      showToast('error', '❌ Failed to connect wallet');
-    } finally {
-      setIsLoading(false);
+      if (walletAddress) {
+        // Save to localStorage
+        localStorage.setItem('decentramind_wallet_address', walletAddress);
+        localStorage.setItem('decentramind_wallet_connected', 'true');
+        
+        // Show success toast
+        showToast('success', `✅ Wallet Connected: ${formatAddress(walletAddress)}`);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to connect wallet');
+      showToast('error', `❌ Failed to connect wallet: ${err.message || 'Unknown error'}`);
     }
-  }, []);
+  }, [connect, walletAddress]);
 
   // Disconnect wallet function
-  const disconnectWallet = useCallback(() => {
-    setWalletAddress(null);
-    setShortAddress(null);
-    setIsConnected(false);
-    setError(null);
-    
-    // Clear localStorage
-    localStorage.removeItem('decentramind_wallet_address');
-    localStorage.removeItem('decentramind_wallet_connected');
-    
-    showToast('info', '🔌 Wallet Disconnected');
-  }, []);
+  const disconnectWallet = useCallback(async () => {
+    try {
+      await disconnect();
+      
+      // Clear localStorage
+      localStorage.removeItem('decentramind_wallet_address');
+      localStorage.removeItem('decentramind_wallet_connected');
+      
+      showToast('info', '🔌 Wallet Disconnected');
+    } catch (err: any) {
+      setError(err.message || 'Failed to disconnect wallet');
+      showToast('error', `❌ Failed to disconnect wallet: ${err.message || 'Unknown error'}`);
+    }
+  }, [disconnect]);
 
   // Copy address to clipboard
   const copyAddress = useCallback(async () => {
@@ -135,7 +121,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       return;
     }
 
-    setIsLoading(true);
     try {
       // Check eligibility first
       const isEligible = await checkAgentMintEligibility(walletAddress);
@@ -153,10 +138,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       
       showToast('success', `🎉 Agent Minted Successfully to Wallet: ${shortAddress}`);
       
-    } catch (err) {
-      showToast('error', '❌ Failed to mint agent');
-    } finally {
-      setIsLoading(false);
+    } catch (err: any) {
+      showToast('error', `❌ Failed to mint agent: ${err.message || 'Unknown error'}`);
     }
   }, [walletAddress, shortAddress, checkAgentMintEligibility]);
 
@@ -206,5 +189,39 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
+  );
+};
+
+interface WalletProviderProps {
+  children: React.ReactNode;
+}
+
+export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
+  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
+  const network = WalletAdapterNetwork.Devnet;
+
+  // You can also provide a custom RPC endpoint.
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new BackpackWalletAdapter(),
+      new GlowWalletAdapter(),
+    ],
+    [network]
+  );
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <SolanaWalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <WalletContextProvider>
+            {children}
+          </WalletContextProvider>
+        </WalletModalProvider>
+      </SolanaWalletProvider>
+    </ConnectionProvider>
   );
 };
