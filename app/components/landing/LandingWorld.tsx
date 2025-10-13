@@ -22,6 +22,7 @@ import TokenDetail from './TokenDetail';
 import MobileFloatingMenu from './MobileFloatingMenu';
 import MvpTourModal from './MvpTourModal';
 import DecentralizedFeaturesShowcase from './DecentralizedFeaturesShowcase';
+import WalletStatus from '../WalletStatus';
 
 const LandingWorld = () => {
   return (
@@ -73,21 +74,22 @@ const LandingWorld = () => {
               ))}
             </div>
             
-            <motion.div
-              className="flex items-center space-x-4"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <motion.a
-                href="/ai-agents/mint"
-                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-medium transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Get Started
-              </motion.a>
-            </motion.div>
+                   <motion.div
+                     className="flex items-center space-x-4"
+                     initial={{ opacity: 0, x: 20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     transition={{ duration: 0.8, delay: 0.2 }}
+                   >
+                     <WalletStatus />
+                     <motion.a
+                       href="/ai-agents/mint"
+                       className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-lg font-medium transition-all duration-300"
+                       whileHover={{ scale: 1.05 }}
+                       whileTap={{ scale: 0.95 }}
+                     >
+                       Get Started
+                     </motion.a>
+                   </motion.div>
           </div>
         </div>
       </motion.nav>

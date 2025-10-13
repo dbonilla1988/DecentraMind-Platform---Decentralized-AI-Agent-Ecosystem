@@ -4,14 +4,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import NatureOverlays from './NatureOverlays';
+import ConnectWalletButton from '../ConnectWalletButton';
+import WalletModal from '../WalletModal';
+import { useWallet } from '../../providers/WalletContext';
 
 const HeroSection = () => {
   const router = useRouter();
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { isConnected, mintAgent } = useWallet();
 
-  const handleMintAgent = () => {
-    router.push('/ai-agents/mint');
+  const handleMintAgent = async () => {
+    if (!isConnected) {
+      setShowWalletModal(true);
+      return;
+    }
+    
+    try {
+      await mintAgent('autonomous-cfo');
+    } catch (error) {
+      console.error('Failed to mint agent:', error);
+    }
   };
 
   const handleLaunchDemo = () => {
@@ -330,45 +344,13 @@ const HeroSection = () => {
           className="flex flex-col sm:flex-row gap-8 justify-center items-center mb-20"
         >
           {/* Connect Wallet Button - Primary CTA */}
-          <motion.button
-            onClick={() => {
-              // Connect wallet functionality
-              console.log('Connecting wallet...');
-              // In real implementation, this would trigger wallet connection
-              window.open('/ai-agents/mint', '_blank');
-            }}
-            className="group relative px-12 py-6 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-2xl font-bold text-xl transition-all duration-300 overflow-hidden shadow-2xl shadow-emerald-500/25"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            animate={{
-              boxShadow: [
-                "0 10px 30px rgba(16, 185, 129, 0.3)",
-                "0 20px 40px rgba(16, 185, 129, 0.5)",
-                "0 10px 30px rgba(16, 185, 129, 0.3)",
-              ],
-            }}
-            transition={{
-              boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-            }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
-              initial={{ x: '-100%' }}
-              whileHover={{ x: '100%' }}
-              transition={{ duration: 0.6 }}
-            />
-            <span className="relative z-10 flex items-center">
-              <span className="mr-3">👛</span>
-              Connect Wallet
-            </span>
-            <motion.div
-              className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center"
-              animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <span className="text-xs">⚡</span>
-            </motion.div>
-          </motion.button>
+          <ConnectWalletButton
+            variant="primary"
+            size="lg"
+            className="px-12 py-6 rounded-2xl text-xl"
+            showStatus={true}
+            onWalletModalOpen={() => setShowWalletModal(true)}
+          />
           <motion.button
             onClick={handleMintAgent}
             className="group relative px-12 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-2xl font-bold text-xl transition-all duration-300 overflow-hidden shadow-2xl shadow-purple-500/25"
@@ -480,6 +462,12 @@ const HeroSection = () => {
           ))}
         </div>
       </div>
+
+      {/* Wallet Modal */}
+      <WalletModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      />
     </section>
   );
 };

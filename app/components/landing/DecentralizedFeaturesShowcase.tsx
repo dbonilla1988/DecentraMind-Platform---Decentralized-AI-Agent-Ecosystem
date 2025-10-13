@@ -2,6 +2,10 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ConnectWalletButton from '../ConnectWalletButton';
+import WalletModal from '../WalletModal';
+import AgentGatekeeper from '../AgentGatekeeper';
+import { useWallet } from '../../providers/WalletContext';
 import AIAgentNetworkMap from './AIAgentNetworkMap';
 import DAOProposalOrbitalInterface from './DAOProposalOrbitalInterface';
 import TransparentTreasuryDashboard from './TransparentTreasuryDashboard';
@@ -11,6 +15,9 @@ import AgentEcosystemGraph from './AgentEcosystemGraph';
 
 const DecentralizedFeaturesShowcase = () => {
   const [activeTab, setActiveTab] = useState('network');
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showAgentGatekeeper, setShowAgentGatekeeper] = useState(false);
+  const { isConnected, mintAgent } = useWallet();
 
   const tabs = [
     { id: 'network', name: 'Agent Network', icon: '🧠', component: AIAgentNetworkMap },
@@ -57,20 +64,12 @@ const DecentralizedFeaturesShowcase = () => {
           viewport={{ once: true }}
           className="text-center mb-8"
         >
-          <motion.button
-            onClick={() => {
-              console.log('Connecting wallet from showcase...');
-              window.open('/ai-agents/mint', '_blank');
-            }}
-            className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-xl font-bold text-white transition-all duration-300 shadow-lg shadow-emerald-500/25"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="flex items-center">
-              <span className="mr-2">👛</span>
-              Connect Wallet to Explore
-            </span>
-          </motion.button>
+          <ConnectWalletButton
+            variant="primary"
+            size="md"
+            showStatus={true}
+            onWalletModalOpen={() => setShowWalletModal(true)}
+          />
         </motion.div>
 
         {/* Tab Navigation */}
@@ -193,20 +192,12 @@ const DecentralizedFeaturesShowcase = () => {
               decentralized governance, and transparent intelligence.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button
-                onClick={() => {
-                  console.log('Connecting wallet from bottom CTA...');
-                  window.open('/ai-agents/mint', '_blank');
-                }}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-lg font-bold text-white transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="flex items-center justify-center">
-                  <span className="mr-2">👛</span>
-                  Connect Wallet
-                </span>
-              </motion.button>
+              <ConnectWalletButton
+                variant="primary"
+                size="md"
+                showStatus={false}
+                onWalletModalOpen={() => setShowWalletModal(true)}
+              />
               <motion.button
                 onClick={() => {
                   console.log('Exploring dashboard...');
@@ -225,6 +216,22 @@ const DecentralizedFeaturesShowcase = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Wallet Modal */}
+      <WalletModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+      />
+
+      {/* Agent Gatekeeper Modal */}
+      <AgentGatekeeper
+        isOpen={showAgentGatekeeper}
+        onClose={() => setShowAgentGatekeeper(false)}
+        onProceed={() => {
+          // Handle agent minting
+          console.log('Proceeding to mint agent...');
+        }}
+      />
     </section>
   );
 };
