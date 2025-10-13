@@ -1,12 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '../providers/WalletContext';
 
 const WalletStatus = () => {
   const { isConnected, shortAddress, disconnectWallet, copyAddress } = useWallet();
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   if (!isConnected) return null;
 
@@ -43,6 +61,7 @@ const WalletStatus = () => {
       <AnimatePresence>
         {showDropdown && (
           <motion.div
+            ref={dropdownRef}
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -55,6 +74,12 @@ const WalletStatus = () => {
                 <div className="flex items-center space-x-1">
                   <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                   <span className="text-xs text-green-400">Connected</span>
+                  <button
+                    onClick={() => setShowDropdown(false)}
+                    className="ml-2 text-gray-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
               
