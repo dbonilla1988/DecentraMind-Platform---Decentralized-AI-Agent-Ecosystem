@@ -21,6 +21,7 @@ import OnboardingModal from './OnboardingModal';
 import TokenDetail from './TokenDetail';
 import MobileFloatingMenu from './MobileFloatingMenu';
 import MvpTourModal from './MvpTourModal';
+import DecentralizedFeaturesShowcase from './DecentralizedFeaturesShowcase';
 
 const LandingWorld = () => {
   return (
@@ -101,6 +102,11 @@ const LandingWorld = () => {
         
         {/* Ecosystem Map Section */}
         <EcosystemMap />
+        
+        {/* Decentralized Features Showcase */}
+        <section id="decentralized-features">
+          <DecentralizedFeaturesShowcase />
+        </section>
         
         {/* Agent Cards Section */}
         <section id="agent-cards">
