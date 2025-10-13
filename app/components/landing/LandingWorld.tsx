@@ -16,7 +16,6 @@ import EcosystemMap from './EcosystemMap';
 import EvolutionTracker from './EvolutionTracker';
 import LoreChapters from './LoreChapters';
 import LiveStats from './LiveStats';
-import ThemeCustomizer from './ThemeCustomizer';
 import AgentChatPreview from './AgentChatPreview';
 import OnboardingModal from './OnboardingModal';
 import TokenDetail from './TokenDetail';
@@ -165,7 +164,6 @@ const LandingWorld = () => {
       </main>
 
       {/* Floating Components */}
-      <ThemeCustomizer />
       <OnboardingModal />
       <MobileFloatingMenu />
       <MvpTourModal />

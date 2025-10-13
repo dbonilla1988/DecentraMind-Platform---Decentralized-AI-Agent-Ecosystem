@@ -1,97 +1,67 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useThemeStore } from '../stores/themeStore';
 
-interface ThemeContextType {
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-}
+// Theme Context for global access
+const ThemeContext = createContext<{
+  visualTheme: string;
+  audioTheme: string;
+}>({
+  visualTheme: 'cosmic',
+  audioTheme: 'silence',
+});
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const useTheme = () => useContext(ThemeContext);
 
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-}
+// Theme Provider Component
+export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+  const { visualTheme, audioTheme } = useThemeStore();
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
-}
-
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const theme = createTheme({
-    palette: {
-      mode: isDarkMode ? 'dark' : 'light',
-      primary: {
-        main: '#00ffff',
-      },
-      secondary: {
-        main: '#2ed573',
-      },
-      background: {
-        default: isDarkMode ? '#121212' : '#f5f5f5',
-        paper: isDarkMode ? '#1e1e1e' : '#ffffff',
-      },
-      text: {
-        primary: isDarkMode ? '#ffffff' : '#000000',
-        secondary: isDarkMode ? '#b0b0b0' : '#666666',
-      },
-    },
-    typography: {
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    },
-    components: {
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            background: isDarkMode ? 'rgba(25, 25, 25, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-            border: `2px solid ${isDarkMode ? '#00ffff' : '#2ed573'}`,
-            borderRadius: 12,
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: 8,
-            textTransform: 'none',
-            fontWeight: 600,
-          },
-        },
-      },
-    },
-  });
-
+  // Apply theme classes to document
   useEffect(() => {
-    // Save theme preference to localStorage
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
+    const root = document.documentElement;
+    
+    // Remove all theme classes
+    root.classList.remove('theme-cosmic', 'theme-nature', 'theme-neon', 'theme-minimal');
+    
+    // Add current theme class
+    root.classList.add(`theme-${visualTheme}`);
+    
+    // Update CSS custom properties
+    const themes = {
+      cosmic: {
+        bg: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900',
+        accent: 'from-purple-500 to-blue-500',
+        text: 'text-white',
+      },
+      nature: {
+        bg: 'bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900',
+        accent: 'from-emerald-500 to-green-500',
+        text: 'text-white',
+      },
+      neon: {
+        bg: 'bg-gradient-to-br from-black via-purple-900 to-pink-900',
+        accent: 'from-cyan-400 to-pink-500',
+        text: 'text-white',
+      },
+      minimal: {
+        bg: 'bg-gradient-to-br from-gray-50 via-white to-gray-100',
+        accent: 'from-gray-600 to-gray-800',
+        text: 'text-gray-900',
+      },
+    };
 
-  useEffect(() => {
-    // Load theme preference from localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === 'dark');
-    }
-  }, []);
+    const currentTheme = themes[visualTheme as keyof typeof themes];
+    
+    root.style.setProperty('--theme-bg', currentTheme.bg);
+    root.style.setProperty('--theme-accent', currentTheme.accent);
+    root.style.setProperty('--theme-text', currentTheme.text);
+  }, [visualTheme]);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </MuiThemeProvider>
+    <ThemeContext.Provider value={{ visualTheme, audioTheme }}>
+      {children}
     </ThemeContext.Provider>
   );
-} 
+};

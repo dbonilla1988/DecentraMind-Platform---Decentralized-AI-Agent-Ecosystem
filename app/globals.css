@@ -767,3 +767,92 @@ body::before {
         font-size: 14px;
     }
 }
+
+/* Theme Customizer Styles */
+@layer components {
+
+    /* Theme-specific classes */
+    .theme-cosmic {
+        --theme-bg: linear-gradient(to bottom right, #0f172a, #581c87, #0f172a);
+        --theme-accent: linear-gradient(to right, #8b5cf6, #3b82f6);
+        --theme-text: #ffffff;
+    }
+
+    .theme-cosmic body {
+        background: linear-gradient(to bottom right, #0f172a, #581c87, #0f172a) !important;
+        color: #ffffff !important;
+    }
+
+    .theme-nature {
+        --theme-bg: linear-gradient(to bottom right, #064e3b, #166534, #134e4a);
+        --theme-accent: linear-gradient(to right, #10b981, #22c55e);
+        --theme-text: #ffffff;
+    }
+
+    .theme-nature body {
+        background: linear-gradient(to bottom right, #064e3b, #166534, #134e4a) !important;
+        color: #ffffff !important;
+    }
+
+    .theme-neon {
+        --theme-bg: linear-gradient(to bottom right, #000000, #581c87, #be185d);
+        --theme-accent: linear-gradient(to right, #22d3ee, #ec4899);
+        --theme-text: #ffffff;
+    }
+
+    .theme-neon body {
+        background: linear-gradient(to bottom right, #000000, #581c87, #be185d) !important;
+        color: #ffffff !important;
+    }
+
+    .theme-minimal {
+        --theme-bg: linear-gradient(to bottom right, #f9fafb, #ffffff, #f3f4f6);
+        --theme-accent: linear-gradient(to right, #4b5563, #1f2937);
+        --theme-text: #111827;
+    }
+
+    .theme-minimal body {
+        background: linear-gradient(to bottom right, #f9fafb, #ffffff, #f3f4f6) !important;
+        color: #111827 !important;
+    }
+
+    /* Audio slider styles */
+    .slider {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .slider::-webkit-slider-track {
+        background: #374151;
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: #8b5cf6;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .slider::-moz-range-track {
+        background: #374151;
+        height: 8px;
+        border-radius: 4px;
+        border: none;
+    }
+
+    .slider::-moz-range-thumb {
+        background: #8b5cf6;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+    }
+}
