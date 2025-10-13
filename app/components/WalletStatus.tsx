@@ -14,7 +14,7 @@ const WalletStatus = () => {
     <div className="relative">
       <motion.button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-emerald-600/20 to-green-600/20 border border-emerald-500/30 rounded-lg backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300"
+        className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-emerald-600/20 to-green-600/20 border border-emerald-500/30 rounded-lg backdrop-blur-sm hover:border-emerald-400/50 transition-all duration-300"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         animate={{
@@ -28,11 +28,10 @@ const WalletStatus = () => {
           boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
         }}
       >
-        <div className="flex items-center space-x-1.5">
+        <div className="flex items-center space-x-1">
           <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-xs font-medium text-emerald-300">Connected</span>
+          <span className="text-xs font-medium text-emerald-300">{shortAddress}</span>
         </div>
-        <span className="text-xs font-mono text-white">{shortAddress}</span>
         <motion.div
           animate={{ rotate: showDropdown ? 180 : 0 }}
           transition={{ duration: 0.2 }}
