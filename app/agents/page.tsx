@@ -40,10 +40,10 @@ const AgentsPage = () => {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
       onClick={() => setSelectedAgent(agent.id)}
-      className={`cursor-pointer bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border transition-all duration-300 ${
+      className={`relative cursor-pointer bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border transition-all duration-300 ${
         selectedAgent === agent.id
-          ? 'border-purple-500/50 bg-purple-500/10'
-          : 'border-slate-700/30 hover:border-slate-600/50'
+          ? 'border-purple-500/50 bg-purple-500/10 ring-2 ring-purple-500/20'
+          : 'border-slate-700/30 hover:border-slate-600/50 hover:bg-slate-700/30'
       }`}
     >
       <div className="flex items-start justify-between mb-4">
@@ -99,6 +99,13 @@ const AgentsPage = () => {
       <div className="mt-4 pt-4 border-t border-slate-700/30">
         <AgentQuickActions agentId={agent.id} />
       </div>
+
+      {/* Selection Indicator */}
+      {selectedAgent === agent.id && (
+        <div className="absolute top-2 right-2">
+          <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+        </div>
+      )}
     </motion.div>
   );
 
@@ -194,9 +201,9 @@ const AgentsPage = () => {
       </nav>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Agent List */}
-        <div className="lg:col-span-2">
+      <div className="space-y-8">
+        {/* Agent List Section */}
+        <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">Available Agents</h2>
             <motion.button
@@ -208,7 +215,7 @@ const AgentsPage = () => {
             </motion.button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAgents.map((agent, index) => (
               <motion.div
                 key={agent.id}
@@ -222,10 +229,13 @@ const AgentsPage = () => {
           </div>
         </div>
 
-        {/* Agent Details */}
-        <div className="lg:col-span-1">
-          {renderAgentDetails()}
-        </div>
+        {/* Agent Details Section */}
+        {selectedAgent && (
+          <div className="border-t border-slate-700/30 pt-8">
+            <h3 className="text-xl font-bold text-white mb-6">Agent Details</h3>
+            {renderAgentDetails()}
+          </div>
+        )}
       </div>
     </AgentManagementLayout>
   );
