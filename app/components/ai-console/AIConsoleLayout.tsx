@@ -18,11 +18,12 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
   activeTab,
   onTabChange
 }) => {
-  const { isConnected, walletAddress } = useWallet();
+  const { isConnected, walletAddress, isLoading } = useWallet();
   const router = useRouter();
   const [globalXP, setGlobalXP] = useState(0);
   const [globalLevel, setGlobalLevel] = useState(1);
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (isConnected) {
@@ -33,10 +34,35 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
   }, [isConnected]);
 
   useEffect(() => {
-    if (!isConnected) {
+    // Add a small delay to allow wallet to initialize
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Check if wallet was previously connected in localStorage
+    const wasConnected = localStorage.getItem('decentramind_wallet_connected') === 'true';
+    const savedAddress = localStorage.getItem('decentramind_wallet_address');
+    
+    // If we have a saved connection but wallet isn't connected yet, wait a bit longer
+    if (wasConnected && savedAddress && !isConnected && !isLoading) {
+      const extendedTimer = setTimeout(() => {
+        setIsInitialized(true);
+      }, 2000);
+      
+      return () => clearTimeout(extendedTimer);
+    }
+  }, [isConnected, isLoading]);
+
+  useEffect(() => {
+    // Only redirect if we're initialized and definitely not connected
+    if (isInitialized && !isLoading && !isConnected) {
       router.push('/');
     }
-  }, [isConnected, router]);
+  }, [isInitialized, isLoading, isConnected, router]);
 
   const tabs = [
     { id: 'finance', name: 'Finance', icon: '🧠', color: 'emerald' },
@@ -46,6 +72,23 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
   ];
 
   const xpProgress = (globalXP % 1000) / 10; // Progress to next level
+
+  if (!isInitialized || isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="text-6xl mb-4">⏳</div>
+          <h1 className="text-2xl font-bold text-white mb-2">Loading AI Console</h1>
+          <p className="text-gray-400 mb-6">Initializing wallet connection...</p>
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (
