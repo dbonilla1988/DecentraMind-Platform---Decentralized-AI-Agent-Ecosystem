@@ -45,6 +45,7 @@ const AIConsolePage = () => {
               </div>
             </div>
             <AgentXPBar agentId="finance-agent" />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Finance Agent'} />
           </div>
         );
       
@@ -63,6 +64,7 @@ const AIConsolePage = () => {
               </div>
             </div>
             <AgentXPBar agentId="wellness-agent" />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Wellness Agent'} />
           </div>
         );
       
@@ -78,6 +80,7 @@ const AIConsolePage = () => {
               </div>
             </div>
             <AgentXPBar agentId="alpha-agent" />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Alpha Agent'} />
           </div>
         );
       
