@@ -8,6 +8,7 @@ import AgentXPBar from '../components/ai-console/AgentXPBar';
 import AgentTaskLog from '../components/ai-console/AgentTaskLog';
 import InsightsPanel from '../components/ai-console/InsightsPanel';
 import AgentQuickActions from '../components/ai-console/AgentQuickActions';
+import SubAgentList from '../components/agents/SubAgentList';
 
 const AgentsPage = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -149,6 +150,20 @@ const AgentsPage = () => {
 
         {/* Agent Insights */}
         <InsightsPanel agentId={agent.id} />
+
+        {/* Sub-Agents */}
+        {agent.subAgents && agent.subAgents.length > 0 && (
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+              <span>🤖</span>
+              <span>Sub-Agents</span>
+              <span className="text-sm px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                {agent.subAgents.length}
+              </span>
+            </h3>
+            <SubAgentList subAgents={agent.subAgents} masterAgentId={agent.id} />
+          </div>
+        )}
 
         {/* Performance Metrics */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">

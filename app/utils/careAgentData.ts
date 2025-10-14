@@ -20,6 +20,19 @@ export interface Insight {
   category: string;
 }
 
+export interface SubAgent {
+  id: string;
+  name: string;
+  description: string;
+  status: 'active' | 'inactive' | 'beta';
+  relatedN8nWorkflow?: string;
+  capabilities: string[];
+  xpReward: number;
+  lastActivity?: string;
+  tasksCompleted: number;
+  successRate: number;
+}
+
 export interface CareAgent {
   id: string;
   name: string;
@@ -41,6 +54,7 @@ export interface CareAgent {
   color: string;
   recentTasks: Task[];
   insights: Insight[];
+  subAgents?: SubAgent[];
 }
 
 export interface Patient {
@@ -176,6 +190,43 @@ export const careAgents: CareAgent[] = [
         timestamp: '2024-01-15T09:30:00Z',
         category: 'risk'
       }
+    ],
+    subAgents: [
+      {
+        id: 'portfolio-optimizer',
+        name: 'Portfolio Optimizer',
+        description: 'Automatically rebalances portfolio based on market conditions',
+        status: 'active',
+        relatedN8nWorkflow: 'e0pthxtytY6HYTLO',
+        capabilities: ['Asset Allocation', 'Risk Assessment', 'Rebalancing', 'Performance Tracking'],
+        xpReward: 30,
+        lastActivity: '2024-01-15T14:15:00Z',
+        tasksCompleted: 28,
+        successRate: 94
+      },
+      {
+        id: 'tax-calculator',
+        name: 'Tax Calculator',
+        description: 'Calculates crypto taxes and generates reports',
+        status: 'active',
+        capabilities: ['Tax Calculation', 'Report Generation', 'Compliance Tracking', 'Deduction Optimization'],
+        xpReward: 25,
+        lastActivity: '2024-01-15T13:30:00Z',
+        tasksCompleted: 15,
+        successRate: 91
+      },
+      {
+        id: 'yield-farmer',
+        name: 'Yield Farmer',
+        description: 'Identifies and executes DeFi yield farming opportunities',
+        status: 'beta',
+        relatedN8nWorkflow: '0vBc9gJYA3iJ5sos',
+        capabilities: ['APY Analysis', 'Liquidity Mining', 'Staking Optimization', 'Reward Tracking'],
+        xpReward: 35,
+        lastActivity: '2024-01-15T12:45:00Z',
+        tasksCompleted: 12,
+        successRate: 87
+      }
     ]
   },
   {
@@ -247,6 +298,55 @@ export const careAgents: CareAgent[] = [
         timestamp: '2024-01-15T10:30:00Z',
         category: 'exercise'
       }
+    ],
+    subAgents: [
+      {
+        id: 'vitals-tracker',
+        name: 'Vitals Tracker',
+        description: 'Monitors real-time patient vitals and health metrics',
+        status: 'active',
+        relatedN8nWorkflow: '0vBc9gJYA3iJ5sos',
+        capabilities: ['Heart Rate Monitoring', 'Blood Pressure Tracking', 'Temperature Monitoring', 'Alert System'],
+        xpReward: 15,
+        lastActivity: '2024-01-15T14:30:00Z',
+        tasksCompleted: 45,
+        successRate: 96
+      },
+      {
+        id: 'appointment-scheduler',
+        name: 'Appointment Scheduler',
+        description: 'Books and manages patient appointments automatically',
+        status: 'active',
+        relatedN8nWorkflow: 'KLifODuorqjN4a4M',
+        capabilities: ['Calendar Integration', 'Automated Booking', 'Reminder System', 'Rescheduling'],
+        xpReward: 20,
+        lastActivity: '2024-01-15T13:45:00Z',
+        tasksCompleted: 32,
+        successRate: 89
+      },
+      {
+        id: 'billing-agent',
+        name: 'Billing & Insurance Agent',
+        description: 'Handles insurance claims and billing automation',
+        status: 'beta',
+        relatedN8nWorkflow: 'pa2wKv0LsdfvSWxn',
+        capabilities: ['Insurance Verification', 'Claim Processing', 'Payment Tracking', 'Billing Reports'],
+        xpReward: 25,
+        lastActivity: '2024-01-15T12:20:00Z',
+        tasksCompleted: 18,
+        successRate: 85
+      },
+      {
+        id: 'medication-manager',
+        name: 'Medication Manager',
+        description: 'Tracks medication schedules and interactions',
+        status: 'active',
+        capabilities: ['Medication Reminders', 'Interaction Checking', 'Dosage Tracking', 'Refill Alerts'],
+        xpReward: 12,
+        lastActivity: '2024-01-15T15:00:00Z',
+        tasksCompleted: 67,
+        successRate: 92
+      }
     ]
   },
   {
@@ -317,6 +417,54 @@ export const careAgents: CareAgent[] = [
         confidence: 82,
         timestamp: '2024-01-15T12:45:00Z',
         category: 'forecast'
+      }
+    ],
+    subAgents: [
+      {
+        id: 'market-scanner',
+        name: 'Market Scanner',
+        description: 'Continuously scans markets for alpha opportunities',
+        status: 'active',
+        relatedN8nWorkflow: 'KLifODuorqjN4a4M',
+        capabilities: ['Price Monitoring', 'Volume Analysis', 'Trend Detection', 'Alert System'],
+        xpReward: 20,
+        lastActivity: '2024-01-15T15:30:00Z',
+        tasksCompleted: 156,
+        successRate: 89
+      },
+      {
+        id: 'sentiment-analyzer',
+        name: 'Sentiment Analyzer',
+        description: 'Analyzes social media and news sentiment for crypto markets',
+        status: 'active',
+        capabilities: ['Social Media Analysis', 'News Sentiment', 'Fear & Greed Index', 'Market Psychology'],
+        xpReward: 18,
+        lastActivity: '2024-01-15T15:15:00Z',
+        tasksCompleted: 89,
+        successRate: 85
+      },
+      {
+        id: 'arbitrage-bot',
+        name: 'Arbitrage Bot',
+        description: 'Identifies and executes cross-exchange arbitrage opportunities',
+        status: 'beta',
+        relatedN8nWorkflow: 'pa2wKv0LsdfvSWxn',
+        capabilities: ['Price Comparison', 'Arbitrage Detection', 'Automated Trading', 'Profit Tracking'],
+        xpReward: 40,
+        lastActivity: '2024-01-15T14:45:00Z',
+        tasksCompleted: 23,
+        successRate: 78
+      },
+      {
+        id: 'whale-tracker',
+        name: 'Whale Tracker',
+        description: 'Monitors large wallet movements and institutional activity',
+        status: 'active',
+        capabilities: ['Wallet Monitoring', 'Transaction Analysis', 'Institutional Tracking', 'Movement Alerts'],
+        xpReward: 22,
+        lastActivity: '2024-01-15T15:00:00Z',
+        tasksCompleted: 67,
+        successRate: 92
       }
     ]
   }
@@ -544,4 +692,55 @@ export const getUrgencyColor = (urgency: string): string => {
     default:
       return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
   }
+};
+
+export const propagateXPToMasterAgent = (subAgentId: string, masterAgentId: string, xpAmount: number): void => {
+  // In a real application, this would update the database
+  // For now, we'll simulate XP propagation by updating localStorage
+  const masterAgent = getAgentById(masterAgentId);
+  if (!masterAgent) return;
+
+  const subAgent = masterAgent.subAgents?.find(sa => sa.id === subAgentId);
+  if (!subAgent) return;
+
+  // Add XP to master agent
+  const currentXP = masterAgent.xp;
+  const newXP = currentXP + xpAmount;
+  
+  // Update master agent XP (in real app, this would be a database update)
+  console.log(`XP Propagation: ${subAgent.name} (+${xpAmount} XP) → ${masterAgent.name} (${currentXP} → ${newXP})`);
+  
+  // Store in localStorage for persistence
+  const xpLog = JSON.parse(localStorage.getItem('xp_propagation_log') || '[]');
+  xpLog.push({
+    timestamp: new Date().toISOString(),
+    subAgentId,
+    subAgentName: subAgent.name,
+    masterAgentId,
+    masterAgentName: masterAgent.name,
+    xpAmount,
+    newTotalXP: newXP
+  });
+  localStorage.setItem('xp_propagation_log', JSON.stringify(xpLog));
+};
+
+export const getXPPropagationLog = () => {
+  return JSON.parse(localStorage.getItem('xp_propagation_log') || '[]');
+};
+
+export const getSubAgentStats = (masterAgentId: string) => {
+  const masterAgent = getAgentById(masterAgentId);
+  if (!masterAgent?.subAgents) return null;
+
+  const totalSubAgentTasks = masterAgent.subAgents.reduce((sum, sa) => sum + sa.tasksCompleted, 0);
+  const totalSubAgentXP = masterAgent.subAgents.reduce((sum, sa) => sum + (sa.tasksCompleted * sa.xpReward), 0);
+  const averageSuccessRate = masterAgent.subAgents.reduce((sum, sa) => sum + sa.successRate, 0) / masterAgent.subAgents.length;
+
+  return {
+    totalSubAgents: masterAgent.subAgents.length,
+    activeSubAgents: masterAgent.subAgents.filter(sa => sa.status === 'active').length,
+    totalSubAgentTasks,
+    totalSubAgentXP,
+    averageSuccessRate: Math.round(averageSuccessRate)
+  };
 };

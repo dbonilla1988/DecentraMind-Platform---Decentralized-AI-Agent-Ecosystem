@@ -11,6 +11,7 @@ import AgentQuickActions from '../components/ai-console/AgentQuickActions';
 import MoodTracker from '../components/ai-console/MoodTracker';
 import CustomAgentCreator from '../components/ai-console/CustomAgentCreator';
 import N8nAgentTrigger from '../components/ai-console/N8nAgentTrigger';
+import SubAgentList from '../components/agents/SubAgentList';
 import { getAgentById } from '../utils/careAgentData';
 
 const AIConsolePage = () => {
@@ -46,6 +47,20 @@ const AIConsolePage = () => {
             </div>
             <AgentXPBar agentId="finance-agent" />
             <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Finance Agent'} />
+            
+            {/* Sub-Agents */}
+            {agent?.subAgents && agent.subAgents.length > 0 && (
+              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <span>🤖</span>
+                  <span>Sub-Agents</span>
+                  <span className="text-sm px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                    {agent.subAgents.length}
+                  </span>
+                </h3>
+                <SubAgentList subAgents={agent.subAgents} masterAgentId={agent.id} />
+              </div>
+            )}
           </div>
         );
       
@@ -65,6 +80,20 @@ const AIConsolePage = () => {
             </div>
             <AgentXPBar agentId="wellness-agent" />
             <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Wellness Agent'} />
+            
+            {/* Sub-Agents */}
+            {agent?.subAgents && agent.subAgents.length > 0 && (
+              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <span>🤖</span>
+                  <span>Sub-Agents</span>
+                  <span className="text-sm px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                    {agent.subAgents.length}
+                  </span>
+                </h3>
+                <SubAgentList subAgents={agent.subAgents} masterAgentId={agent.id} />
+              </div>
+            )}
           </div>
         );
       
@@ -81,6 +110,20 @@ const AIConsolePage = () => {
             </div>
             <AgentXPBar agentId="alpha-agent" />
             <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Alpha Agent'} />
+            
+            {/* Sub-Agents */}
+            {agent?.subAgents && agent.subAgents.length > 0 && (
+              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <span>🤖</span>
+                  <span>Sub-Agents</span>
+                  <span className="text-sm px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                    {agent.subAgents.length}
+                  </span>
+                </h3>
+                <SubAgentList subAgents={agent.subAgents} masterAgentId={agent.id} />
+              </div>
+            )}
           </div>
         );
       
