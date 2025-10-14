@@ -12,7 +12,7 @@ import MoodTracker from '../components/ai-console/MoodTracker';
 import CustomAgentCreator from '../components/ai-console/CustomAgentCreator';
 import N8nAgentTrigger from '../components/ai-console/N8nAgentTrigger';
 import SubAgentList from '../components/agents/SubAgentList';
-import { getAgentById } from '../utils/careAgentData';
+import { getAgentById, careAgents } from '../utils/careAgentData';
 
 const AIConsolePage = () => {
   const [activeTab, setActiveTab] = useState('finance');
@@ -20,16 +20,29 @@ const AIConsolePage = () => {
 
   const agent = getAgentById(selectedAgent);
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    // Map tab names to agent IDs
-    const agentIdMap: { [key: string]: string } = {
+  // Dynamic agent mapping based on actual agent data
+  const getAgentByTab = (tabId: string) => {
+    const agentMap: { [key: string]: string } = {
       'finance': 'finance-agent',
       'wellness': 'wellness-agent', 
       'alpha': 'alpha-agent',
       'custom': 'custom-agent'
     };
-    setSelectedAgent(agentIdMap[tab] || 'finance-agent');
+    
+    const agentId = agentMap[tabId];
+    if (!agentId) {
+      // Fallback: try to find agent by type
+      const fallbackAgent = careAgents.find(agent => agent.type === tabId);
+      return fallbackAgent?.id || 'finance-agent';
+    }
+    
+    return agentId;
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const agentId = getAgentByTab(tab);
+    setSelectedAgent(agentId);
   };
 
   const renderTabContent = () => {
@@ -46,7 +59,7 @@ const AIConsolePage = () => {
               </div>
             </div>
             <AgentXPBar agentId="finance-agent" />
-            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Finance Agent'} />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Autonomous CFO'} />
             
             {/* Sub-Agents */}
             {agent?.subAgents && agent.subAgents.length > 0 && (
@@ -79,7 +92,7 @@ const AIConsolePage = () => {
               </div>
             </div>
             <AgentXPBar agentId="wellness-agent" />
-            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Wellness Agent'} />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Care Orchestrator'} />
             
             {/* Sub-Agents */}
             {agent?.subAgents && agent.subAgents.length > 0 && (
@@ -109,7 +122,7 @@ const AIConsolePage = () => {
               </div>
             </div>
             <AgentXPBar agentId="alpha-agent" />
-            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Alpha Agent'} />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Crypto Alpha Assistant'} />
             
             {/* Sub-Agents */}
             {agent?.subAgents && agent.subAgents.length > 0 && (
@@ -131,12 +144,41 @@ const AIConsolePage = () => {
         return (
           <div className="space-y-6">
             <CustomAgentCreator />
-            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Unknown Agent'} />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Custom Agent'} />
+            
+            {/* Sub-Agents for Custom Agent (if any) */}
+            {agent?.subAgents && agent.subAgents.length > 0 && (
+              <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                  <span>🤖</span>
+                  <span>Sub-Agents</span>
+                  <span className="text-sm px-2 py-1 bg-purple-500/20 text-purple-400 rounded-full">
+                    {agent.subAgents.length}
+                  </span>
+                </h3>
+                <SubAgentList subAgents={agent.subAgents} masterAgentId={agent.id} />
+              </div>
+            )}
           </div>
         );
       
       default:
-        return null;
+        // Fallback for unknown tabs
+        return (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🤖</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Agent Not Found</h2>
+            <p className="text-gray-400 mb-6">The selected agent is not available.</p>
+            <motion.button
+              onClick={() => handleTabChange('finance')}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg font-medium text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Go to Autonomous CFO
+            </motion.button>
+          </div>
+        );
     }
   };
 

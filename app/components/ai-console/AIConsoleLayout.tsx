@@ -65,10 +65,10 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
   }, [isInitialized, isLoading, isConnected, router]);
 
   const tabs = [
-    { id: 'finance', name: 'Finance', icon: '🧠', color: 'emerald' },
-    { id: 'wellness', name: 'Wellness', icon: '❤️', color: 'rose' },
-    { id: 'alpha', name: 'Alpha', icon: '📈', color: 'purple' },
-    { id: 'custom', name: 'Custom', icon: '🎨', color: 'cyan' }
+    { id: 'finance', name: '🧠 Autonomous CFO', icon: '🧠', color: 'emerald' },
+    { id: 'wellness', name: '❤️ Care Orchestrator', icon: '❤️', color: 'rose' },
+    { id: 'alpha', name: '📈 Crypto Alpha Assistant', icon: '📈', color: 'purple' },
+    { id: 'custom', name: '🎨 Custom Agents', icon: '🎨', color: 'cyan' }
   ];
 
   const xpProgress = (globalXP % 1000) / 10; // Progress to next level
