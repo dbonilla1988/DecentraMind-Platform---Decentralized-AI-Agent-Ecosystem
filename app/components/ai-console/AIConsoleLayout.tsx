@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWallet } from '../providers/WalletContext';
+import { useWallet } from '../../providers/WalletContext';
 import { useRouter } from 'next/navigation';
-import WalletStatus from '../components/WalletStatus';
-import { getTotalXP, getTotalEarnings, getGlobalLevel } from '../utils/agentData';
+import WalletStatus from '../WalletStatus';
+import { getTotalXP, getTotalEarnings, getGlobalLevel } from '../../utils/agentData';
 
 interface AIConsoleLayoutProps {
   children: React.ReactNode;

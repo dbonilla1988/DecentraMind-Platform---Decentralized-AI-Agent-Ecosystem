@@ -62,9 +62,9 @@ const LandingWorld = () => {
             >
               {[
                 { name: "Dashboard", href: "/dashboard" },
+                { name: "AI Console", href: "/ai-console" },
                 { name: "Agent Workflows", href: "/workflows" },
                 { name: "Agent Management", href: "/agents" },
-                { name: "Health Portal", href: "/care/insights" },
                 { name: "Governance", href: "/governance" },
               ].map((item, index) => (
                 <motion.a
