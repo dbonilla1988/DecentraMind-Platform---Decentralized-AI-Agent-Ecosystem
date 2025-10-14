@@ -7,14 +7,22 @@ import AppointmentBooking from '../../components/pwa/AppointmentBooking';
 import ConsentPopup from '../../components/pwa/ConsentPopup';
 
 interface PWAPageProps {
-  params: {
+  params: Promise<{
     hospitalSlug: string;
-  };
+  }>;
 }
 
 const PWAPage: React.FC<PWAPageProps> = ({ params }) => {
   const [activeTab, setActiveTab] = useState('chat');
   const [showConsent, setShowConsent] = useState(true);
+  const [hospitalSlug, setHospitalSlug] = useState<string>('');
+
+  // Handle async params
+  React.useEffect(() => {
+    params.then(({ hospitalSlug }) => {
+      setHospitalSlug(hospitalSlug);
+    });
+  }, [params]);
 
   const tabs = [
     { id: 'chat', name: 'Chat', icon: '💬', color: 'blue' },

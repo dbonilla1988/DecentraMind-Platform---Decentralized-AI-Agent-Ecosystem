@@ -14,13 +14,20 @@ import { getAgentById } from '../utils/careAgentData';
 
 const AIConsolePage = () => {
   const [activeTab, setActiveTab] = useState('finance');
-  const [selectedAgent, setSelectedAgent] = useState('finance');
+  const [selectedAgent, setSelectedAgent] = useState('finance-agent');
 
   const agent = getAgentById(selectedAgent);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setSelectedAgent(tab);
+    // Map tab names to agent IDs
+    const agentIdMap: { [key: string]: string } = {
+      'finance': 'finance-agent',
+      'wellness': 'wellness-agent', 
+      'alpha': 'alpha-agent',
+      'custom': 'custom-agent'
+    };
+    setSelectedAgent(agentIdMap[tab] || 'finance-agent');
   };
 
   const renderTabContent = () => {
@@ -30,13 +37,13 @@ const AIConsolePage = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <AgentTaskLog agentId="finance" />
+                <AgentTaskLog agentId="finance-agent" />
               </div>
               <div>
-                <InsightsPanel agentId="finance" />
+                <InsightsPanel agentId="finance-agent" />
               </div>
             </div>
-            <AgentXPBar agentId="finance" />
+            <AgentXPBar agentId="finance-agent" />
           </div>
         );
       
@@ -45,16 +52,16 @@ const AIConsolePage = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <AgentTaskLog agentId="wellness" />
+                <AgentTaskLog agentId="wellness-agent" />
                 <div className="mt-6">
                   <MoodTracker />
                 </div>
               </div>
               <div>
-                <InsightsPanel agentId="wellness" />
+                <InsightsPanel agentId="wellness-agent" />
               </div>
             </div>
-            <AgentXPBar agentId="wellness" />
+            <AgentXPBar agentId="wellness-agent" />
           </div>
         );
       
@@ -63,13 +70,13 @@ const AIConsolePage = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <AgentTaskLog agentId="alpha" />
+                <AgentTaskLog agentId="alpha-agent" />
               </div>
               <div>
-                <InsightsPanel agentId="alpha" />
+                <InsightsPanel agentId="alpha-agent" />
               </div>
             </div>
-            <AgentXPBar agentId="alpha" />
+            <AgentXPBar agentId="alpha-agent" />
           </div>
         );
       

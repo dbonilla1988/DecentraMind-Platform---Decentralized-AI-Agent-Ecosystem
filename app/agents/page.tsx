@@ -6,7 +6,7 @@ import { careAgents, getAgentById } from '../utils/careAgentData';
 
 const AgentsPage = () => {
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<string | null>('finance-agent');
 
   const tabs = [
     { id: 'all', name: 'All Agents', icon: '🤖', color: 'blue' },
