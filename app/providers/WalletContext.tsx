@@ -18,7 +18,8 @@ interface WalletContextType {
   disconnectWallet: () => void;
   copyAddress: () => void;
   checkAgentMintEligibility: (address: string) => Promise<boolean>;
-  mintAgent: (agentType: string) => Promise<void>;
+  mintAgent: (agentType: string, customData?: any) => Promise<void>;
+  showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -187,7 +188,7 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   // Mint agent function
-  const mintAgent = useCallback(async (agentType: string) => {
+  const mintAgent = useCallback(async (agentType: string, customData?: any) => {
     if (!walletAddress) {
       ToastManager.getInstance().show('error', '❌ Please connect your wallet first');
       return;
@@ -208,12 +209,22 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const currentCount = parseInt(localStorage.getItem(`minted_agents_${walletAddress}`) || '0');
       localStorage.setItem(`minted_agents_${walletAddress}`, (currentCount + 1).toString());
       
+      // Store custom agent data if provided
+      if (customData) {
+        localStorage.setItem(`custom_agent_${walletAddress}_${Date.now()}`, JSON.stringify(customData));
+      }
+      
       ToastManager.getInstance().show('success', `🎉 Agent Minted Successfully to Wallet: ${shortAddress}`);
       
     } catch (err: any) {
       ToastManager.getInstance().show('error', `❌ Failed to mint agent: ${err.message || 'Unknown error'}`);
     }
   }, [walletAddress, shortAddress, checkAgentMintEligibility]);
+
+  // Show toast notification
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning') => {
+    ToastManager.getInstance().show(type, message);
+  }, []);
 
   const value: WalletContextType = {
     isConnected,
@@ -224,6 +235,7 @@ const WalletContextProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     copyAddress,
     checkAgentMintEligibility,
     mintAgent,
+    showToast,
     isLoading,
     error,
   };
