@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { getAgentById } from '../../utils/agentData';
+import { getAgentById } from '../../utils/careAgentData';
 import { useWallet } from '../../providers/WalletContext';
 
 interface AgentQuickActionsProps {

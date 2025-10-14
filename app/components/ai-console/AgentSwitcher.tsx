@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { agents, getAgentById } from '../../utils/agentData';
+import { careAgents, getAgentById } from '../../utils/careAgentData';
 
 interface AgentSwitcherProps {
   selectedAgent: string;
@@ -26,8 +26,8 @@ const AgentSwitcher: React.FC<AgentSwitcherProps> = ({ selectedAgent, onAgentCha
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${currentAgent.gradient} flex items-center justify-center text-2xl`}>
-              {currentAgent.icon}
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-2xl`}>
+              {currentAgent.avatar}
             </div>
             <div className="text-left">
               <h3 className="text-lg font-semibold text-white">{currentAgent.name}</h3>
@@ -37,18 +37,18 @@ const AgentSwitcher: React.FC<AgentSwitcherProps> = ({ selectedAgent, onAgentCha
                 <span className="text-xs text-gray-500">•</span>
                 <span className="text-xs text-blue-400">{currentAgent.xp.toLocaleString()} XP</span>
                 <span className="text-xs text-gray-500">•</span>
-                <span className="text-xs text-purple-400">${currentAgent.earnings.toLocaleString()}</span>
+                <span className="text-xs text-purple-400">{currentAgent.totalEarnings} DMT</span>
               </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            {currentAgent.isMinted ? (
+            {currentAgent.status === 'active' ? (
               <span className="px-2 py-1 bg-emerald-400/10 text-emerald-400 rounded-full text-xs font-medium">
-                Minted
+                Active
               </span>
             ) : (
               <span className="px-2 py-1 bg-yellow-400/10 text-yellow-400 rounded-full text-xs font-medium">
-                Available
+                {currentAgent.status}
               </span>
             )}
             <motion.div
@@ -73,7 +73,7 @@ const AgentSwitcher: React.FC<AgentSwitcherProps> = ({ selectedAgent, onAgentCha
             className="absolute top-full left-0 right-0 mt-2 bg-slate-800/90 backdrop-blur-md rounded-xl border border-slate-700/30 shadow-xl z-50"
           >
             <div className="p-2">
-              {agents.map((agent) => (
+              {careAgents.map((agent) => (
                 <motion.button
                   key={agent.id}
                   onClick={() => {
@@ -82,17 +82,17 @@ const AgentSwitcher: React.FC<AgentSwitcherProps> = ({ selectedAgent, onAgentCha
                   }}
                   className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
                     selectedAgent === agent.id
-                      ? `bg-gradient-to-r ${agent.gradient} text-white`
+                      ? `bg-gradient-to-r from-purple-500 to-blue-500 text-white`
                       : 'hover:bg-slate-700/50 text-gray-300'
                   }`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="text-xl">{agent.icon}</div>
+                    <div className="text-xl">{agent.avatar}</div>
                     <div className="flex-1">
                       <div className="font-medium">{agent.name}</div>
-                      <div className="text-xs opacity-75">{agent.domain}</div>
+                      <div className="text-xs opacity-75">{agent.type}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs opacity-75">Level {agent.level}</div>

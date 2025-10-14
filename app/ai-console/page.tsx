@@ -10,7 +10,7 @@ import AgentSwitcher from '../components/ai-console/AgentSwitcher';
 import AgentQuickActions from '../components/ai-console/AgentQuickActions';
 import MoodTracker from '../components/ai-console/MoodTracker';
 import CustomAgentCreator from '../components/ai-console/CustomAgentCreator';
-import { getAgentById } from '../utils/agentData';
+import { getAgentById } from '../utils/careAgentData';
 
 const AIConsolePage = () => {
   const [activeTab, setActiveTab] = useState('finance');

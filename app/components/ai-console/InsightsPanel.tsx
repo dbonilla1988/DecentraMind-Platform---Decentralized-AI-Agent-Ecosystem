@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAgentById } from '../../utils/agentData';
+import { getAgentById } from '../../utils/careAgentData';
 
 interface InsightsPanelProps {
   agentId: string;

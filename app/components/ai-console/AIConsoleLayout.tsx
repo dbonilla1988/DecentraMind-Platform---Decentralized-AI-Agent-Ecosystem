@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '../../providers/WalletContext';
 import { useRouter } from 'next/navigation';
 import WalletStatus from '../WalletStatus';
-import { getTotalXP, getTotalEarnings, getGlobalLevel } from '../../utils/agentData';
+import { getTotalXP, getTotalEarnings, getGlobalLevel } from '../../utils/careAgentData';
 
 interface AIConsoleLayoutProps {
   children: React.ReactNode;
