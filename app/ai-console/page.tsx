@@ -10,6 +10,7 @@ import AgentSwitcher from '../components/ai-console/AgentSwitcher';
 import AgentQuickActions from '../components/ai-console/AgentQuickActions';
 import MoodTracker from '../components/ai-console/MoodTracker';
 import CustomAgentCreator from '../components/ai-console/CustomAgentCreator';
+import N8nAgentTrigger from '../components/ai-console/N8nAgentTrigger';
 import { getAgentById } from '../utils/careAgentData';
 
 const AIConsolePage = () => {
@@ -84,6 +85,7 @@ const AIConsolePage = () => {
         return (
           <div className="space-y-6">
             <CustomAgentCreator />
+            <N8nAgentTrigger agentId={selectedAgent} agentName={agent?.name || 'Unknown Agent'} />
           </div>
         );
       
