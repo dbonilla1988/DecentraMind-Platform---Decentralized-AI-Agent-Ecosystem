@@ -3,6 +3,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { careAgents, getAgentById } from '../utils/careAgentData';
+import AgentManagementLayout from '../components/agents/AgentManagementLayout';
+import AgentXPBar from '../components/ai-console/AgentXPBar';
+import AgentTaskLog from '../components/ai-console/AgentTaskLog';
+import InsightsPanel from '../components/ai-console/InsightsPanel';
+import AgentQuickActions from '../components/ai-console/AgentQuickActions';
 
 const AgentsPage = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -89,6 +94,11 @@ const AgentsPage = () => {
           <span className="text-purple-400 font-medium">{agent.pricing.mintCost} DMT</span>
         </div>
       </div>
+
+      {/* Quick Actions */}
+      <div className="mt-4 pt-4 border-t border-slate-700/30">
+        <AgentQuickActions agentId={agent.id} />
+      </div>
     </motion.div>
   );
 
@@ -102,104 +112,56 @@ const AgentsPage = () => {
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30"
+        className="space-y-6"
       >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="text-4xl">{agent.avatar}</div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">{agent.name}</h2>
-              <p className="text-gray-400">{agent.description}</p>
+        {/* Agent Header */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="text-4xl">{agent.avatar}</div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">{agent.name}</h2>
+                <p className="text-gray-400">{agent.description}</p>
+              </div>
             </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg font-medium text-white transition-all duration-300"
+            >
+              Manage Agent
+            </motion.button>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg font-medium text-white transition-all duration-300"
-          >
-            Manage Agent
-          </motion.button>
+
+          {/* Agent XP Bar */}
+          <AgentXPBar agentId={agent.id} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-3">Performance Metrics</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Level</span>
-                <span className="text-white font-medium">Level {agent.level}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">XP</span>
-                <span className="text-white font-medium">{agent.xp.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Tasks Completed</span>
-                <span className="text-white font-medium">{agent.tasksCompleted}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Success Rate</span>
-                <span className="text-white font-medium">{agent.successRate}%</span>
-              </div>
-            </div>
-          </div>
+        {/* Agent Task Log */}
+        <AgentTaskLog agentId={agent.id} />
 
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-3">Capabilities</h3>
-            <div className="space-y-2">
-              {agent.capabilities.map((capability, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span className="text-gray-300 text-sm">{capability}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Agent Insights */}
+        <InsightsPanel agentId={agent.id} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-3">Pricing</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Mint Cost</span>
-                <span className="text-purple-400 font-medium">{agent.pricing.mintCost} DMT</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Monthly Fee</span>
-                <span className="text-purple-400 font-medium">{agent.pricing.monthlyFee} DMT</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total Earnings</span>
-                <span className="text-green-400 font-medium">{agent.totalEarnings} DMT</span>
-              </div>
+        {/* Performance Metrics */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+          <h3 className="text-lg font-semibold text-white mb-4">Performance Metrics</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-slate-700/30 rounded-lg">
+              <div className="text-2xl font-bold text-emerald-400">{agent.tasksCompleted}</div>
+              <div className="text-sm text-gray-400">Tasks Completed</div>
             </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-3">Quick Actions</h3>
-            <div className="space-y-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-white text-sm transition-colors"
-              >
-                View Task History
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-white text-sm transition-colors"
-              >
-                Configure Settings
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full p-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-white text-sm transition-colors"
-              >
-                Upgrade Agent
-              </motion.button>
+            <div className="text-center p-4 bg-slate-700/30 rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">{agent.successRate}%</div>
+              <div className="text-sm text-gray-400">Success Rate</div>
+            </div>
+            <div className="text-center p-4 bg-slate-700/30 rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">{agent.capabilities.length}</div>
+              <div className="text-sm text-gray-400">Capabilities</div>
+            </div>
+            <div className="text-center p-4 bg-slate-700/30 rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">{agent.totalEarnings}</div>
+              <div className="text-sm text-gray-400">Total Earnings (DMT)</div>
             </div>
           </div>
         </div>
@@ -208,87 +170,64 @@ const AgentsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
-      <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-sm">DM</span>
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-                Agent Management
-              </span>
-            </div>
-            <div className="text-sm text-gray-400">
-              {careAgents.length} Total Agents
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <AgentManagementLayout agentCount={careAgents.length}>
       {/* Tab Navigation */}
-      <nav className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 py-2">
-            {tabs.map((tab) => (
-              <motion.button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? `bg-gradient-to-r from-${tab.color}-500 to-${tab.color}-600 text-white shadow-lg shadow-${tab.color}-500/25`
-                    : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <span className="text-lg mr-2">{tab.icon}</span>
-                {tab.name}
-              </motion.button>
-            ))}
-          </div>
+      <nav className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/30 mb-8">
+        <div className="flex space-x-1 py-2">
+          {tabs.map((tab) => (
+            <motion.button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                activeTab === tab.id
+                  ? `bg-gradient-to-r from-${tab.color}-500 to-${tab.color}-600 text-white shadow-lg shadow-${tab.color}-500/25`
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="text-lg mr-2">{tab.icon}</span>
+              {tab.name}
+            </motion.button>
+          ))}
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Agent List */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Available Agents</h2>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg font-medium text-white transition-all duration-300"
-              >
-                + Create Custom Agent
-              </motion.button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredAgents.map((agent, index) => (
-                <motion.div
-                  key={agent.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  {renderAgentCard(agent)}
-                </motion.div>
-              ))}
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Agent List */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Available Agents</h2>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg font-medium text-white transition-all duration-300"
+            >
+              + Create Custom Agent
+            </motion.button>
           </div>
 
-          {/* Agent Details */}
-          <div className="lg:col-span-1">
-            {renderAgentDetails()}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredAgents.map((agent, index) => (
+              <motion.div
+                key={agent.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                {renderAgentCard(agent)}
+              </motion.div>
+            ))}
           </div>
         </div>
-      </main>
-    </div>
+
+        {/* Agent Details */}
+        <div className="lg:col-span-1">
+          {renderAgentDetails()}
+        </div>
+      </div>
+    </AgentManagementLayout>
   );
 };
 
