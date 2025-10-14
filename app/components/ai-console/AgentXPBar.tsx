@@ -24,7 +24,7 @@ const AgentXPBar: React.FC<AgentXPBarProps> = ({ agentId }) => {
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <span className="text-2xl">{agent.icon}</span>
+          <span className="text-2xl">{agent.avatar}</span>
           <div>
             <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
             <p className="text-sm text-gray-400">Level {agent.level} • {agent.xp.toLocaleString()} XP</p>
@@ -32,7 +32,7 @@ const AgentXPBar: React.FC<AgentXPBarProps> = ({ agentId }) => {
         </div>
         <div className="text-right">
           <div className="text-lg font-bold text-emerald-400">
-            ${agent.earnings.toLocaleString()}
+            ${agent.totalEarnings.toLocaleString()}
           </div>
           <div className="text-sm text-gray-400">Total Earnings</div>
         </div>
@@ -46,7 +46,7 @@ const AgentXPBar: React.FC<AgentXPBarProps> = ({ agentId }) => {
         </div>
         <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
           <motion.div
-            className={`h-full bg-gradient-to-r ${agent.gradient} rounded-full relative`}
+            className={`h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full relative`}
             initial={{ width: 0 }}
             animate={{ width: `${xpProgress}%` }}
             transition={{ duration: 1, delay: 0.5 }}

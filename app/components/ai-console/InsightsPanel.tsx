@@ -57,7 +57,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ agentId }) => {
       {/* Header */}
       <div className="p-6 border-b border-slate-700/30">
         <div className="flex items-center space-x-3">
-          <span className="text-2xl">{agent.icon}</span>
+          <span className="text-2xl">{agent.avatar}</span>
           <div>
             <h3 className="text-lg font-semibold text-white">{agent.name} Insights</h3>
             <p className="text-sm text-gray-400">{agent.insights.length} active insights</p>

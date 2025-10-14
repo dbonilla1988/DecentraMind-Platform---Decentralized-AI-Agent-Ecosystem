@@ -1,4 +1,25 @@
 // Care Agent Data Configuration
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: 'completed' | 'in-progress' | 'failed' | 'pending';
+  category: string;
+  xpReward: number;
+  timestamp: string;
+  duration?: string;
+}
+
+export interface Insight {
+  id: string;
+  title: string;
+  description: string;
+  type: 'tip' | 'forecast' | 'warning' | 'opportunity';
+  confidence: number;
+  timestamp: string;
+  category: string;
+}
+
 export interface CareAgent {
   id: string;
   name: string;
@@ -18,6 +39,8 @@ export interface CareAgent {
   totalEarnings: number;
   avatar: string;
   color: string;
+  recentTasks: Task[];
+  insights: Insight[];
 }
 
 export interface Patient {
@@ -102,7 +125,58 @@ export const careAgents: CareAgent[] = [
     successRate: 94,
     totalEarnings: 1850,
     avatar: '🧠',
-    color: 'emerald'
+    color: 'emerald',
+    recentTasks: [
+      {
+        id: 'task-1',
+        title: 'Portfolio Optimization',
+        description: 'Analyzed trending token performance and optimized allocation',
+        status: 'completed',
+        category: 'analysis',
+        xpReward: 50,
+        timestamp: '2024-01-15T10:30:00Z',
+        duration: '15m'
+      },
+      {
+        id: 'task-2',
+        title: 'Risk Assessment',
+        description: 'Evaluated risk factors for new DeFi protocol',
+        status: 'in-progress',
+        category: 'risk',
+        xpReward: 35,
+        timestamp: '2024-01-15T11:00:00Z'
+      },
+      {
+        id: 'task-3',
+        title: 'Yield Optimization',
+        description: 'Researched DeFi yield opportunities',
+        status: 'completed',
+        category: 'research',
+        xpReward: 30,
+        timestamp: '2024-01-14T14:20:00Z',
+        duration: '45m'
+      }
+    ],
+    insights: [
+      {
+        id: 'insight-1',
+        title: 'Market Opportunity',
+        description: 'ETH staking yields are trending 15% higher than last month',
+        type: 'opportunity',
+        confidence: 85,
+        timestamp: '2024-01-15T10:00:00Z',
+        category: 'yield'
+      },
+      {
+        id: 'insight-2',
+        title: 'Risk Alert',
+        description: 'High volatility detected in DeFi tokens - consider reducing exposure',
+        type: 'warning',
+        confidence: 92,
+        timestamp: '2024-01-15T09:30:00Z',
+        category: 'risk'
+      }
+    ]
   },
   {
     id: 'wellness-agent',
@@ -122,7 +196,58 @@ export const careAgents: CareAgent[] = [
     successRate: 88,
     totalEarnings: 1200,
     avatar: '❤️',
-    color: 'rose'
+    color: 'rose',
+    recentTasks: [
+      {
+        id: 'task-4',
+        title: 'Health Monitoring',
+        description: 'Generated health insights report',
+        status: 'completed',
+        category: 'report',
+        xpReward: 35,
+        timestamp: '2024-01-15T09:15:00Z',
+        duration: '20m'
+      },
+      {
+        id: 'task-5',
+        title: 'Mood Analysis',
+        description: 'Analyzed user mood patterns and provided recommendations',
+        status: 'completed',
+        category: 'analysis',
+        xpReward: 25,
+        timestamp: '2024-01-15T08:30:00Z',
+        duration: '10m'
+      },
+      {
+        id: 'task-6',
+        title: 'Medication Reminder',
+        description: 'Scheduled medication reminders for patient',
+        status: 'in-progress',
+        category: 'reminder',
+        xpReward: 15,
+        timestamp: '2024-01-15T12:00:00Z'
+      }
+    ],
+    insights: [
+      {
+        id: 'insight-3',
+        title: 'Health Tip',
+        description: 'Stay hydrated - drink at least 8 glasses of water daily',
+        type: 'tip',
+        confidence: 95,
+        timestamp: '2024-01-15T11:00:00Z',
+        category: 'nutrition'
+      },
+      {
+        id: 'insight-4',
+        title: 'Exercise Recommendation',
+        description: 'Morning exercise can boost metabolism and improve mood',
+        type: 'tip',
+        confidence: 88,
+        timestamp: '2024-01-15T10:30:00Z',
+        category: 'exercise'
+      }
+    ]
   },
   {
     id: 'alpha-agent',
@@ -142,7 +267,58 @@ export const careAgents: CareAgent[] = [
     successRate: 91,
     totalEarnings: 2400,
     avatar: '📈',
-    color: 'purple'
+    color: 'purple',
+    recentTasks: [
+      {
+        id: 'task-7',
+        title: 'Market Analysis',
+        description: 'Analyzed trending token performance and market sentiment',
+        status: 'completed',
+        category: 'analysis',
+        xpReward: 60,
+        timestamp: '2024-01-15T13:45:00Z',
+        duration: '30m'
+      },
+      {
+        id: 'task-8',
+        title: 'Alpha Signal Generation',
+        description: 'Generated alpha signals for DeFi opportunities',
+        status: 'completed',
+        category: 'signal',
+        xpReward: 45,
+        timestamp: '2024-01-15T12:30:00Z',
+        duration: '25m'
+      },
+      {
+        id: 'task-9',
+        title: 'Risk Assessment',
+        description: 'Evaluated risk factors for new token investments',
+        status: 'in-progress',
+        category: 'risk',
+        xpReward: 40,
+        timestamp: '2024-01-15T14:00:00Z'
+      }
+    ],
+    insights: [
+      {
+        id: 'insight-5',
+        title: 'Alpha Signal',
+        description: 'Strong bullish momentum detected in Layer 2 tokens',
+        type: 'opportunity',
+        confidence: 78,
+        timestamp: '2024-01-15T13:00:00Z',
+        category: 'signal'
+      },
+      {
+        id: 'insight-6',
+        title: 'Market Forecast',
+        description: 'Bitcoin dominance expected to increase over next 30 days',
+        type: 'forecast',
+        confidence: 82,
+        timestamp: '2024-01-15T12:45:00Z',
+        category: 'forecast'
+      }
+    ]
   }
 ];
 
