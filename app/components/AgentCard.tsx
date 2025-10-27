@@ -45,6 +45,12 @@ import {
   Timeline as TimelineIcon,
 } from '@mui/icons-material';
 import {
+  getAgentAvatarInfo,
+  getAgentAvatarUrl,
+  getAgentEmoji,
+  type Agent as AvatarAgent,
+} from '@/utils/avatarUtils';
+import {
   AgentUpgradePath,
   calculateUpgradePath,
   getAgentTier,
@@ -127,17 +133,18 @@ export default function AgentCard({ agent, onUpgrade, onManageTasks, onTaskCompl
     }
   }, [agent.name, careOrchestratorNFT]);
   
-  // Determine avatar URL - use NFT image if available, otherwise fallback to agent.avatar
-  const getAvatarUrl = () => {
-    if (agent.name === 'Care Orchestrator' && careOrchestratorNFT) {
-      console.log('🎯 Using NFT image for Care Orchestrator:', careOrchestratorNFT.metadata.image);
-      return careOrchestratorNFT.metadata.image;
-    }
-    console.log('🎯 Using fallback avatar for', agent.name, ':', agent.avatar);
-    return agent.avatar;
-  };
+  // Get avatar information using the new unified system
+  const avatarInfo = getAgentAvatarInfo({
+    id: agent.id,
+    name: agent.name,
+    imageCid: agent.imageCid,
+    avatar: agent.avatar,
+    domain: agent.domain,
+    type: agent.type
+  });
 
-  const avatarUrl = getAvatarUrl();
+  const avatarUrl = avatarInfo.primaryUrl;
+  const fallbackEmoji = avatarInfo.emoji;
 
   React.useEffect(() => {
     const path = calculateUpgradePath(
@@ -289,70 +296,24 @@ export default function AgentCard({ agent, onUpgrade, onManageTasks, onTaskCompl
       </Box>
 
       <CardContent sx={{ pt: 6, pb: 2 }}>
-        {/* Agent Avatar - NFT Style */}
+        {/* Agent Avatar - Unified System */}
         <Box sx={{ mb: 2, textAlign: 'center' }}>
-          {agent.name === 'Care Orchestrator' ? (
-            <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-gradient-to-tr from-cyan-400 via-blue-500 to-teal-400 animate-spin-slow">
-              <img
-                src={avatarUrl || "https://ipfs.io/ipfs/bafybeidki742oakaxqxdk5u6s7zz4iinaszyyw62mpcmxmkcpo3m3qsm6a/david_859400_AI_Healthcare_Assistant_soft_glowing_humanoid_fo_249dd97f-c4a7-45a3-b0b6-ed8e71e6b9be_0.png"}
-                alt="Care Orchestrator Avatar"
-                className="w-full h-full object-cover"
-                loading="lazy"
-                onError={(e) => {
-                  // fallback emoji rendering logic
-                  e.currentTarget.style.display = 'none';
-                  const fallback = document.createElement('div');
-                  fallback.textContent = '🩺';
-                  fallback.className = 'absolute inset-0 flex items-center justify-center text-3xl bg-gray-800 rounded-full';
-                  e.currentTarget.parentNode?.appendChild(fallback);
-                }}
-              />
-            </div>
-          ) : (
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                overflow: 'hidden',
-                margin: '0 auto 12px',
-                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-gradient-to-tr from-cyan-400 via-blue-500 to-teal-400 animate-spin-slow">
+            <img
+              src={avatarUrl}
+              alt={`${agent.name} Avatar`}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                // Fallback to emoji when image fails to load
+                e.currentTarget.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.textContent = fallbackEmoji;
+                fallback.className = 'absolute inset-0 flex items-center justify-center text-3xl bg-gray-800 rounded-full';
+                e.currentTarget.parentNode?.appendChild(fallback);
               }}
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={`${agent.name} Avatar - AI Assistant`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.nextElementSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  display: avatarUrl ? 'none' : 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px',
-                  color: 'white',
-                }}
-              >
-                🤖
-              </Box>
-            </Box>
-          )}
+            />
+          </div>
         </Box>
 
         {/* Agent Name and Level */}

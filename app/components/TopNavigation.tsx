@@ -10,9 +10,9 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+} from './ui/navigation-menu';
+import { Button } from './ui/button';
+import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { 
   Bot, 
   Coins, 
@@ -43,110 +43,73 @@ import {
   Calendar,
   Search
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils';
+import ZoneNav from './navigation/ZoneNav';
+import DecentraMindLogo from './DecentraMindLogo';
 
 // Navigation configuration
 const navigationConfig = [
   {
-    title: 'AI Agents',
-    href: '/ai-agents',
+    title: 'Ecosystem',
+    href: '/agents',
     icon: Bot,
     description: 'AI Agent Tools & Marketplace',
     items: [
       {
-        title: 'Agent Management',
-        href: '/ai-agents/management',
+        title: 'Agents',
+        href: '/agents',
         description: 'Manage and interact with your AI agents',
         icon: Bot,
       },
       {
-        title: 'Agent Workflows',
-        href: '/ai-agents/workflows',
-        description: 'Create and manage AI automation workflows',
-        icon: Zap,
+        title: 'AI Console',
+        href: '/ai-console',
+        description: 'Dashboard suite for agent management',
+        icon: BarChart3,
       },
       {
-        title: 'Mint New Agent',
-        href: '/ai-agents/mint',
-        description: 'Create new AI agents with custom capabilities',
-        icon: Sparkles,
-        badge: 'New',
-      },
-      {
-        title: 'AI Chat Hub',
-        href: '/ai-agents/chat',
-        description: 'Interact with AI agents through chat interface',
-        icon: MessageSquare,
-      },
-      {
-        title: 'Agent Evolution',
-        href: '/ai-agents/evolution',
-        description: 'Track agent growth and development metrics',
-        icon: TrendingUp,
-      },
-      {
-        title: 'Agent Marketplace',
-        href: '/ai-agents/marketplace',
-        description: 'Buy and sell AI agents securely',
+        title: 'Marketplace',
+        href: '/marketplace',
+        description: 'Buy and sell AI agent NFTs',
         icon: Store,
       },
       {
-        title: 'Crypto Alpha Assistant',
-        href: '/crypto-alpha',
-        description: 'Discover and evaluate promising crypto tokens',
-        icon: TrendingUp,
-        badge: 'Alpha',
-      },
-      {
-        title: 'Test Workflows',
-        href: '/test-workflows',
-        description: 'Simulate AI agent workflows and test capabilities',
+        title: 'Services',
+        href: '/services',
+        description: 'Professional AI & blockchain services',
         icon: Zap,
-        badge: 'Test',
       },
     ],
   },
   {
-    title: 'Token & Governance',
+    title: 'Governance',
     href: '/governance',
     icon: Coins,
     description: 'Token Economics & Governance',
     items: [
       {
-        title: 'Tokenomics',
-        href: '/governance/tokenomics',
-        description: 'Understand token economics and distribution',
+        title: 'Governance',
+        href: '/governance',
+        description: 'Token economics and governance overview',
         icon: Coins,
       },
       {
-        title: 'DAO Governance',
-        href: '/governance/dao',
-        description: 'Participate in governance decisions',
+        title: 'DAO',
+        href: '/dao',
+        description: 'Decentralized governance and treasury',
         icon: Building2,
       },
       {
-        title: 'Staking & Rewards',
-        href: '/governance/staking',
+        title: 'Staking',
+        href: '/staking',
         description: 'Stake tokens and earn rewards',
         icon: Crown,
       },
       {
-        title: 'Token Burning',
-        href: '/governance/burning',
-        description: 'View token burning metrics and deflationary data',
-        icon: Flame,
-      },
-      {
-        title: 'Treasury Overview',
-        href: '/governance/treasury',
-        description: 'Community treasury and funds management',
-        icon: Shield,
-      },
-      {
-        title: 'Voting History',
-        href: '/governance/voting',
-        description: 'Track governance voting history and results',
-        icon: Users2,
+        title: 'Airdrop',
+        href: '/airdrop',
+        description: 'Claim token rewards and check eligibility',
+        icon: Sparkles,
       },
     ],
   },
@@ -192,6 +155,32 @@ const navigationConfig = [
         href: '/services/support',
         description: 'Get help and technical support',
         icon: HelpCircle,
+      },
+    ],
+  },
+  {
+    title: 'My Account',
+    href: '/profile',
+    icon: Users,
+    description: 'Personal Dashboard & Settings',
+    items: [
+      {
+        title: 'Profile',
+        href: '/profile',
+        description: 'View and manage your profile',
+        icon: Users,
+      },
+      {
+        title: 'XP Tracker',
+        href: '/xp',
+        description: 'Track your experience points and achievements',
+        icon: Target,
+      },
+      {
+        title: 'Settings',
+        href: '/settings',
+        description: 'Account settings and preferences',
+        icon: Settings,
       },
     ],
   },
@@ -417,14 +406,8 @@ const MobileMenu = () => {
       <SheetContent side="right" className="w-80 bg-zinc-900 border-cyan-400/20">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-xl flex items-center justify-center border border-cyan-400/30">
-              <Sparkles className="w-6 h-6 text-cyan-400" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-cyan-300">DecentraMind Labs</h1>
-              <p className="text-xs text-gray-400">AI + Blockchain Platform</p>
-            </div>
+          <div className="flex items-center justify-center mb-8">
+            <DecentraMindLogo size="md" variant="text-only" animated={true} />
           </div>
 
           {/* Navigation */}
@@ -499,20 +482,10 @@ export default function TopNavigation() {
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <Link
-              href="/dashboard"
-              className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105"
+              href="/"
+              className="group transition-all duration-300 hover:scale-105"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-xl flex items-center justify-center border border-cyan-400/30 shadow-lg shadow-cyan-400/25 group-hover:shadow-cyan-400/40 transition-all duration-300">
-                <Sparkles className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-cyan-300 group-hover:text-cyan-200 transition-colors">
-                  DecentraMind Labs
-                </h1>
-                <p className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors">
-                  AI + Blockchain Platform
-                </p>
-              </div>
+              <DecentraMindLogo size="lg" variant="text-only" animated={true} />
             </Link>
           </div>
 
@@ -528,6 +501,11 @@ export default function TopNavigation() {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-lg bg-zinc-800/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300"
               />
             </div>
+          </div>
+
+          {/* Zone Navigation */}
+          <div className="hidden md:flex items-center">
+            <ZoneNav variant="horizontal" />
           </div>
 
           {/* Desktop Navigation */}
@@ -658,7 +636,7 @@ export default function TopNavigation() {
           </div>
 
           {/* Mobile Menu */}
-          <MobileMenu />
+          <ZoneNav variant="mobile" />
         </div>
       </div>
     </div>

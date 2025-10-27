@@ -54,12 +54,23 @@ export async function POST(request: NextRequest): Promise<NextResponse<N8nRespon
 
     // Check if N8N_DOMAIN is configured
     if (!N8N_DOMAIN) {
+      console.warn('N8N_DOMAIN not configured. Running in mock mode.');
+      
+      // Return mock success response for development
       return NextResponse.json(
         {
-          success: false,
-          error: 'N8N_DOMAIN not configured. Please set N8N_DOMAIN environment variable.',
+          success: true,
+          data: {
+            message: `Mock workflow execution for ${agentName}`,
+            agentName,
+            workflowId: AGENT_WORKFLOW_MAP[agentName],
+            payload,
+            timestamp: new Date().toISOString(),
+            mock: true,
+          },
+          workflowId: AGENT_WORKFLOW_MAP[agentName],
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
 

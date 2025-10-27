@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '../../providers/WalletContext';
 import { useRouter } from 'next/navigation';
 import WalletStatus from '../WalletStatus';
+import DecentraMindLogo from '../DecentraMindLogo';
 import { getTotalXP, getTotalEarnings, getGlobalLevel } from '../../utils/careAgentData';
 
 interface AIConsoleLayoutProps {
@@ -24,14 +25,29 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
   const [globalLevel, setGlobalLevel] = useState(1);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [particles, setParticles] = useState<Array<{ left: number; top: number; duration: number; delay: number }>>([]);
 
   useEffect(() => {
-    if (isConnected) {
-      setGlobalXP(getTotalXP());
-      setGlobalLevel(getGlobalLevel());
-      setTotalEarnings(getTotalEarnings());
-    }
-  }, [isConnected]);
+    // Set demo values for XP and earnings
+    setGlobalXP(getTotalXP());
+    setGlobalLevel(getGlobalLevel());
+    setTotalEarnings(getTotalEarnings());
+  }, []);
+
+  useEffect(() => {
+    // Generate particle positions once on client side to avoid hydration mismatch
+    const generateParticles = () => {
+      const particleData = Array.from({ length: 50 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 3 + Math.random() * 2,
+        delay: Math.random() * 2,
+      }));
+      setParticles(particleData);
+    };
+
+    generateParticles();
+  }, []);
 
   useEffect(() => {
     // Add a small delay to allow wallet to initialize
@@ -57,12 +73,13 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
     }
   }, [isConnected, isLoading]);
 
-  useEffect(() => {
-    // Only redirect if we're initialized and definitely not connected
-    if (isInitialized && !isLoading && !isConnected) {
-      router.push('/');
-    }
-  }, [isInitialized, isLoading, isConnected, router]);
+  // Comment out the redirect for demo purposes
+  // useEffect(() => {
+  //   // Only redirect if we're initialized and definitely not connected
+  //   if (isInitialized && !isLoading && !isConnected) {
+  //     router.push('/');
+  //   }
+  // }, [isInitialized, isLoading, isConnected, router]);
 
   const tabs = [
     { id: 'finance', name: '🧠 Autonomous CFO', icon: '🧠', color: 'emerald' },
@@ -73,68 +90,70 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
 
   const xpProgress = (globalXP % 1000) / 10; // Progress to next level
 
-  if (!isInitialized || isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="text-6xl mb-4">⏳</div>
-          <h1 className="text-2xl font-bold text-white mb-2">Loading AI Console</h1>
-          <p className="text-gray-400 mb-6">Initializing wallet connection...</p>
-          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </motion.div>
-      </div>
-    );
-  }
+  // Skip loading screen for demo mode
+  // if (!isInitialized || isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+  //       <motion.div
+  //         initial={{ opacity: 0, scale: 0.9 }}
+  //         animate={{ opacity: 1, scale: 1 }}
+  //         className="text-center"
+  //       >
+  //         <div className="text-6xl mb-4">⏳</div>
+  //         <h1 className="text-2xl font-bold text-white mb-2">Loading AI Console</h1>
+  //         <p className="text-gray-400 mb-6">Initializing wallet connection...</p>
+  //         <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+  //       </motion.div>
+  //     </div>
+  //   );
+  // }
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="text-6xl mb-4">🔐</div>
-          <h1 className="text-2xl font-bold text-white mb-2">Wallet Required</h1>
-          <p className="text-gray-400 mb-6">Please connect your wallet to access the AI Console</p>
-          <motion.button
-            onClick={() => router.push('/')}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Go to Landing Page
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+  // Allow demo mode without wallet connection
+  // if (!isConnected) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+  //       <motion.div
+  //         initial={{ opacity: 0, scale: 0.9 }}
+  //         animate={{ opacity: 1, scale: 1 }}
+  //         className="text-center"
+  //       >
+  //         <div className="text-6xl mb-4">🔐</div>
+  //         <h1 className="text-2xl font-bold text-white mb-2">Wallet Required</h1>
+  //         <p className="text-gray-400 mb-6">Please connect your wallet to access the AI Console</p>
+  //         <motion.button
+  //           onClick={() => router.push('/')}
+  //           className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300"
+  //           whileHover={{ scale: 1.05 }}
+  //           whileTap={{ scale: 0.95 }}
+  //         >
+  //           Go to Landing Page
+  //         </motion.button>
+  //       </motion.div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Cosmic Background Particles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
-        {[...Array(50)].map((_, i) => (
+        {particles.length > 0 && particles.map((particle, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white rounded-full opacity-20"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
             }}
             animate={{
               y: [0, -20, 0],
               opacity: [0.2, 0.8, 0.2],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
             }}
           />
         ))}
@@ -145,22 +164,7 @@ const AIConsoleLayout: React.FC<AIConsoleLayoutProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <motion.div
-              className="flex items-center"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white font-bold text-sm">DM</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-                  DecentraMind Labs
-                </h1>
-                <p className="text-xs text-gray-400">The Swiss Army of AI Agents</p>
-              </div>
-            </motion.div>
+            <DecentraMindLogo size="md" variant="text-only" animated={true} />
 
             {/* Global XP Bar */}
             <motion.div

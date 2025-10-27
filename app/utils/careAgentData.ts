@@ -52,6 +52,7 @@ export interface CareAgent {
   totalEarnings: number;
   avatar: string;
   color: string;
+  did?: string; // DID for Storacha gravatar
   recentTasks: Task[];
   insights: Insight[];
   subAgents?: SubAgent[];
@@ -140,6 +141,7 @@ export const careAgents: CareAgent[] = [
     totalEarnings: 1850,
     avatar: '🧠',
     color: 'emerald',
+    did: 'did:key:z6MknwpAmMmVTQMapEYEj5zyPhadGXRZ5KBfewN5JyYizmoC',
     recentTasks: [
       {
         id: 'task-1',
@@ -234,7 +236,7 @@ export const careAgents: CareAgent[] = [
     name: 'Care Orchestrator',
     type: 'wellness',
     description: 'Comprehensive health & wellness management',
-    capabilities: ['Health Monitoring', 'Mood Tracking', 'Medication Reminders', 'Wellness Tips', 'Health Analytics'],
+    capabilities: ['Health Monitoring', 'Mood Tracking', 'Medication Reminders', 'Wellness Tips', 'Health Analytics', 'Cold Plunge Tracking'],
     pricing: {
       mintCost: 80,
       monthlyFee: 20,
@@ -248,6 +250,7 @@ export const careAgents: CareAgent[] = [
     totalEarnings: 1200,
     avatar: '❤️',
     color: 'rose',
+    did: 'did:key:z6MkhM38Q4gRRYcCL4WH4CE77LaBg9biEDedTTHA32Vg1iAv',
     recentTasks: [
       {
         id: 'task-4',
@@ -277,6 +280,16 @@ export const careAgents: CareAgent[] = [
         category: 'reminder',
         xpReward: 15,
         timestamp: '2024-01-15T12:00:00Z'
+      },
+      {
+        id: 'task-cold-plunge',
+        title: 'Cold Plunge Session',
+        description: 'Cold therapy completed at 8°C for 3 minutes',
+        status: 'completed',
+        category: 'cold_plunge_session',
+        xpReward: 20,
+        timestamp: '2024-01-15T16:30:00Z',
+        duration: '3m'
       }
     ],
     insights: [
@@ -297,6 +310,15 @@ export const careAgents: CareAgent[] = [
         confidence: 88,
         timestamp: '2024-01-15T10:30:00Z',
         category: 'exercise'
+      },
+      {
+        id: 'insight-cold-plunge',
+        title: 'Cold Therapy Benefits',
+        description: 'Cold exposure improves circulation and reduces inflammation',
+        type: 'tip',
+        confidence: 95,
+        timestamp: '2024-01-15T16:35:00Z',
+        category: 'cold_therapy'
       }
     ],
     subAgents: [
@@ -368,6 +390,7 @@ export const careAgents: CareAgent[] = [
     totalEarnings: 2400,
     avatar: '📈',
     color: 'purple',
+    did: 'did:key:z6Mkf8Q4gRRYcCL4WH4CE77LaBg9biEDedTTHA32Vg1iAv',
     recentTasks: [
       {
         id: 'task-7',

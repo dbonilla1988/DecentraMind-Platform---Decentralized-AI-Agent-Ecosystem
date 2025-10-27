@@ -1,7 +1,12 @@
 'use client';
 
-import LandingWorld from './components/landing/LandingWorld';
+import LandingPage from './components/landing/LandingPage';
+import ZoneLayout from './components/layout/ZoneLayout';
 
 export default function Home() {
-  return <LandingWorld />;
+  return (
+    <ZoneLayout zone="home" showNavigation={true}>
+      <LandingPage />
+    </ZoneLayout>
+  );
 }

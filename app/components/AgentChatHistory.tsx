@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Card, CardContent, Avatar, Grid, List, ListItem, ListItemAvatar, ListItemText, Paper, Tabs, Tab } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Brain as BrainIcon, MessageCircle as MessageCircleIcon, Activity as ActivityIcon } from 'lucide-react';
+import { getAgentAvatarUrl, getAgentEmoji } from '@/utils/avatarUtils';
 
 const mockAgents = [
     { id: 'master-001', name: 'VisionSync', avatar: '/master-agent.png', isMaster: true },
@@ -67,7 +67,21 @@ const AgentChatHistory = () => {
                                             }}
                                         >
                                             <ListItemAvatar>
-                                                <Avatar src={agent.avatar} />
+                                                <Avatar 
+                                                  src={getAgentAvatarUrl({ 
+                                                    id: agent.id, 
+                                                    name: agent.name, 
+                                                    avatar: agent.avatar 
+                                                  })} 
+                                                  sx={{ 
+                                                    width: 40, 
+                                                    height: 40,
+                                                    fontSize: '1.2rem',
+                                                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                                                  }}
+                                                >
+                                                  {getAgentEmoji({ id: agent.id, name: agent.name })}
+                                                </Avatar>
                                             </ListItemAvatar>
                                             <ListItemText primary={agent.name} secondary={agent.isMaster ? 'Master Agent' : 'Sub-Agent'} />
                                         </ListItem>

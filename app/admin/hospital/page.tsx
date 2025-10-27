@@ -814,3 +814,17 @@ const SettingsTab: React.FC<{ settings: HospitalSettings }> = ({ settings }) => 
 };
 
 export default AdminConsolePage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

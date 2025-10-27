@@ -1,6 +1,8 @@
+import ZoneLayout from '../components/layout/ZoneLayout';
+
 export default function GovernancePage() {
   return (
-    <div className="min-h-screen bg-zinc-900 text-white">
+    <ZoneLayout zone="governance">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-cyan-300 mb-4">Token & Governance</h1>
@@ -35,7 +37,7 @@ export default function GovernancePage() {
           </div>
         </div>
       </div>
-    </div>
+    </ZoneLayout>
   );
 }
 

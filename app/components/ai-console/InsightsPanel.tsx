@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAgentById } from '../../utils/careAgentData';
+import { getAgentEmoji } from '@/utils/avatarUtils';
 
 interface InsightsPanelProps {
   agentId: string;
@@ -57,7 +58,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ agentId }) => {
       {/* Header */}
       <div className="p-6 border-b border-slate-700/30">
         <div className="flex items-center space-x-3">
-          <span className="text-2xl">{agent.avatar}</span>
+          <span className="text-2xl">{getAgentEmoji({ name: agent.name, id: agent.id })}</span>
           <div>
             <h3 className="text-lg font-semibold text-white">{agent.name} Insights</h3>
             <p className="text-sm text-gray-400">{agent.insights.length} active insights</p>

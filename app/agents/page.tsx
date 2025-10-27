@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { careAgents, getAgentById } from '../utils/careAgentData';
+import { getAgentAvatarUrl } from '@/utils/avatarUtils';
 import AgentManagementLayout from '../components/agents/AgentManagementLayout';
+import ZoneLayout from '../components/layout/ZoneLayout';
 import AgentXPBar from '../components/ai-console/AgentXPBar';
 import AgentTaskLog from '../components/ai-console/AgentTaskLog';
 import InsightsPanel from '../components/ai-console/InsightsPanel';
@@ -49,7 +51,27 @@ const AgentsPage = () => {
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="text-3xl">{agent.avatar}</div>
+          <img
+            src={agent.did ? `https://gravatar.storacha.network/avatar/${agent.did}` : getAgentAvatarUrl({ 
+              id: agent.id === 'finance-agent' ? 'agent-cfo' : 
+                  agent.id === 'wellness-agent' ? 'agent-care' : 
+                  agent.id === 'alpha-agent' ? 'agent-crypto' : 'default',
+              name: agent.name 
+            })}
+            alt={agent.name}
+            className="w-12 h-12 rounded-full border-2 border-gradient shadow-md"
+            onError={(e) => {
+              // Fallback to existing avatar system if Storacha fails
+              if (agent.did) {
+                e.currentTarget.src = getAgentAvatarUrl({ 
+                  id: agent.id === 'finance-agent' ? 'agent-cfo' : 
+                      agent.id === 'wellness-agent' ? 'agent-care' : 
+                      agent.id === 'alpha-agent' ? 'agent-crypto' : 'default',
+                  name: agent.name 
+                });
+              }
+            }}
+          />
           <div>
             <h3 className="text-lg font-semibold text-white">{agent.name}</h3>
             <p className="text-gray-400 text-sm">{agent.type}</p>
@@ -126,7 +148,27 @@ const AgentsPage = () => {
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="text-4xl">{agent.avatar}</div>
+              <img
+                src={agent.did ? `https://gravatar.storacha.network/avatar/${agent.did}` : getAgentAvatarUrl({ 
+                  id: agent.id === 'finance-agent' ? 'agent-cfo' : 
+                      agent.id === 'wellness-agent' ? 'agent-care' : 
+                      agent.id === 'alpha-agent' ? 'agent-crypto' : 'default',
+                  name: agent.name 
+                })}
+                alt={agent.name}
+                className="w-20 h-20 rounded-full border-4 border-gradient shadow-md"
+                onError={(e) => {
+                  // Fallback to existing avatar system if Storacha fails
+                  if (agent.did) {
+                    e.currentTarget.src = getAgentAvatarUrl({ 
+                      id: agent.id === 'finance-agent' ? 'agent-cfo' : 
+                          agent.id === 'wellness-agent' ? 'agent-care' : 
+                          agent.id === 'alpha-agent' ? 'agent-crypto' : 'default',
+                      name: agent.name 
+                    });
+                  }
+                }}
+              />
               <div>
                 <h2 className="text-2xl font-bold text-white">{agent.name}</h2>
                 <p className="text-gray-400">{agent.description}</p>
@@ -192,67 +234,91 @@ const AgentsPage = () => {
   };
 
   return (
-    <AgentManagementLayout agentCount={careAgents.length}>
-      {/* Tab Navigation */}
-      <nav className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/30 mb-8">
-        <div className="flex space-x-1 py-2">
-          {tabs.map((tab) => (
-            <motion.button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
-                activeTab === tab.id
-                  ? `bg-gradient-to-r from-${tab.color}-500 to-${tab.color}-600 text-white shadow-lg shadow-${tab.color}-500/25`
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="text-lg mr-2">{tab.icon}</span>
-              {tab.name}
-            </motion.button>
-          ))}
-        </div>
-      </nav>
+    <ZoneLayout zone="agents">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AgentManagementLayout agentCount={careAgents.length}>
+          {/* Tab Navigation */}
+          <nav className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/30 mb-8">
+            <div className="flex space-x-1 py-2">
+              {tabs.map((tab) => (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                    activeTab === tab.id
+                      ? `bg-gradient-to-r from-${tab.color}-500 to-${tab.color}-600 text-white shadow-lg shadow-${tab.color}-500/25`
+                      : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span className="text-lg mr-2">{tab.icon}</span>
+                  {tab.name}
+                </motion.button>
+              ))}
+            </div>
+          </nav>
 
-      {/* Main Content */}
-      <div className="space-y-8">
-        {/* Agent List Section */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Available Agents</h2>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg font-medium text-white transition-all duration-300"
-            >
-              + Create Custom Agent
-            </motion.button>
-          </div>
+          {/* Main Content */}
+          <div className="space-y-8">
+            {/* Agent List Section */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">Available Agents</h2>
+                <div className="flex space-x-3">
+                  <motion.a
+                    href="/agents/sub-agents"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg font-medium text-white transition-all duration-300 flex items-center"
+                  >
+                    <span className="mr-2">🔧</span>
+                    Sub-Agents
+                  </motion.a>
+                  <motion.a
+                    href="/marketplace"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 rounded-lg font-medium text-white transition-all duration-300 flex items-center"
+                  >
+                    <span className="mr-2">🛒</span>
+                    Marketplace
+                  </motion.a>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg font-medium text-white transition-all duration-300"
+                  >
+                    + Create Custom Agent
+                  </motion.button>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAgents.map((agent, index) => (
-              <motion.div
-                key={agent.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                {renderAgentCard(agent)}
-              </motion.div>
-            ))}
-          </div>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAgents.map((agent, index) => (
+                  <motion.div
+                    key={agent.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    {renderAgentCard(agent)}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
-        {/* Agent Details Section */}
-        {selectedAgent && (
-          <div className="border-t border-slate-700/30 pt-8">
-            <h3 className="text-xl font-bold text-white mb-6">Agent Details</h3>
-            {renderAgentDetails()}
+            {/* Agent Details Section */}
+            {selectedAgent && (
+              <div className="border-t border-slate-700/30 pt-8">
+                <h3 className="text-xl font-bold text-white mb-6">Agent Details</h3>
+                {renderAgentDetails()}
+              </div>
+            )}
           </div>
-        )}
+        </AgentManagementLayout>
       </div>
-    </AgentManagementLayout>
+    </ZoneLayout>
   );
 };
 

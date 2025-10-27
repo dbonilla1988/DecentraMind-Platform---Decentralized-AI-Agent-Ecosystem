@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { careAgents, getAgentById } from '../../utils/careAgentData';
+import { getAgentEmoji } from '@/utils/avatarUtils';
 
 interface AgentSwitcherProps {
   selectedAgent: string;
@@ -27,7 +28,7 @@ const AgentSwitcher: React.FC<AgentSwitcherProps> = ({ selectedAgent, onAgentCha
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-2xl`}>
-              {currentAgent.avatar}
+              {getAgentEmoji({ name: currentAgent.name, id: currentAgent.id })}
             </div>
             <div className="text-left">
               <h3 className="text-lg font-semibold text-white">{currentAgent.name}</h3>
@@ -89,7 +90,7 @@ const AgentSwitcher: React.FC<AgentSwitcherProps> = ({ selectedAgent, onAgentCha
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="text-xl">{agent.avatar}</div>
+                    <div className="text-xl">{getAgentEmoji({ name: agent.name, id: agent.id })}</div>
                     <div className="flex-1">
                       <div className="font-medium">{agent.name}</div>
                       <div className="text-xs opacity-75">{agent.type}</div>

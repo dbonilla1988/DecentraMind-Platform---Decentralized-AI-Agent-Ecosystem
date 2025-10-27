@@ -1,11 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const LoreSection = () => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [showGalaxy, setShowGalaxy] = useState(false);
+  const [particles, setParticles] = useState<Array<{ left: number; top: number; duration: number; delay: number }>>([]);
+
+  useEffect(() => {
+    // Generate particle positions once on client side to avoid hydration mismatch
+    const generateParticles = () => {
+      const particleData = Array.from({ length: 20 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 3 + Math.random() * 2,
+        delay: Math.random() * 2,
+      }));
+      setParticles(particleData);
+    };
+
+    generateParticles();
+  }, []);
 
   const handleRevealLore = () => {
     setIsRevealed(true);
@@ -39,22 +55,22 @@ const LoreSection = () => {
           ))}
           
           {/* Floating stars */}
-          {[...Array(20)].map((_, i) => (
+          {particles.length > 0 && particles.map((particle, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-white rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
               }}
               animate={{
                 opacity: [0, 1, 0],
                 scale: [0, 1, 0],
               }}
               transition={{
-                duration: 2 + Math.random() * 2,
+                duration: particle.duration,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: particle.delay,
               }}
             />
           ))}

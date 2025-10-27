@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import AIConsoleLayout from '../components/ai-console/AIConsoleLayout';
+import ZoneLayout from '../components/layout/ZoneLayout';
 import AgentXPBar from '../components/ai-console/AgentXPBar';
 import AgentTaskLog from '../components/ai-console/AgentTaskLog';
 import InsightsPanel from '../components/ai-console/InsightsPanel';
@@ -12,11 +13,13 @@ import MoodTracker from '../components/ai-console/MoodTracker';
 import CustomAgentCreator from '../components/ai-console/CustomAgentCreator';
 import N8nAgentTrigger from '../components/ai-console/N8nAgentTrigger';
 import SubAgentList from '../components/agents/SubAgentList';
+import ColdPlungeSync from '../components/agents/ColdPlungeSync';
 import { getAgentById, careAgents } from '../utils/careAgentData';
 
 const AIConsolePage = () => {
   const [activeTab, setActiveTab] = useState('finance');
   const [selectedAgent, setSelectedAgent] = useState('finance-agent');
+  const [showColdPlungeSync, setShowColdPlungeSync] = useState(false);
 
   const agent = getAgentById(selectedAgent);
 
@@ -85,6 +88,35 @@ const AIConsolePage = () => {
                 <AgentTaskLog agentId="wellness-agent" />
                 <div className="mt-6">
                   <MoodTracker />
+                </div>
+                
+                {/* Cold Plunge Sync Toggle */}
+                <div className="mt-6">
+                  <button
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                      showColdPlungeSync
+                        ? 'bg-cyan-600 text-white hover:bg-cyan-700'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                    onClick={() => setShowColdPlungeSync(!showColdPlungeSync)}
+                  >
+                    {showColdPlungeSync ? '❌ Close Cold Plunge Form' : '🧊 Log Cold Plunge Session'}
+                  </button>
+
+                  {showColdPlungeSync && (
+                    <AnimatePresence>
+                      <motion.div
+                        key="cold-plunge-form"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4"
+                      >
+                        <ColdPlungeSync agentId="care-orchestrator" />
+                      </motion.div>
+                    </AnimatePresence>
+                  )}
                 </div>
               </div>
               <div>
@@ -183,25 +215,27 @@ const AIConsolePage = () => {
   };
 
   return (
-    <AIConsoleLayout activeTab={activeTab} onTabChange={handleTabChange}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Agent Switcher */}
-        <div className="mb-8">
-          <AgentSwitcher 
-            selectedAgent={selectedAgent} 
-            onAgentChange={setSelectedAgent}
-          />
-        </div>
+    <ZoneLayout zone="ai-console" showNavigation={false}>
+      <AIConsoleLayout activeTab={activeTab} onTabChange={handleTabChange}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Agent Switcher */}
+          <div className="mb-8">
+            <AgentSwitcher 
+              selectedAgent={selectedAgent} 
+              onAgentChange={setSelectedAgent}
+            />
+          </div>
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <AgentQuickActions agentId={selectedAgent} />
-        </div>
+          {/* Quick Actions */}
+          <div className="mb-8">
+            <AgentQuickActions agentId={selectedAgent} />
+          </div>
 
-        {/* Tab Content */}
-        {renderTabContent()}
-      </div>
-    </AIConsoleLayout>
+          {/* Tab Content */}
+          {renderTabContent()}
+        </div>
+      </AIConsoleLayout>
+    </ZoneLayout>
   );
 };
 

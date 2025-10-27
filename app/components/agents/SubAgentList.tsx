@@ -116,6 +116,11 @@ const SubAgentList: React.FC<SubAgentListProps> = ({ subAgents, masterAgentId })
         onSuccess: (data) => {
           console.log(`Sub-agent ${subAgent.name} workflow triggered successfully:`, data);
           
+          // Check if this is a mock response
+          if (data.mock) {
+            console.log(`🔄 Mock mode: ${subAgent.name} workflow simulated successfully`);
+          }
+          
           // Propagate XP to master agent
           propagateXPToMasterAgent(subAgent.id, masterAgentId, subAgent.xpReward);
           
@@ -124,6 +129,11 @@ const SubAgentList: React.FC<SubAgentListProps> = ({ subAgents, masterAgentId })
         },
         onError: (error) => {
           console.error(`Failed to trigger ${subAgent.name} workflow:`, error);
+          
+          // Show user-friendly error message
+          if (error.includes('N8N_DOMAIN not configured')) {
+            console.warn('N8N integration not configured. Running in development mode.');
+          }
         },
       });
     } catch (error) {

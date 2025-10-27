@@ -59,6 +59,7 @@ import AgentCard from './AgentCard';
 import AgentUpgradeModal from './AgentUpgradeModal';
 import TaskManagement from './TaskManagement';
 import { AgentUpgradeTier, getAgentTier } from '../utils/agentUpgradeUtils';
+import { getAgentAvatarInfo, getAgentAvatarUrl, getAgentEmoji } from '@/utils/avatarUtils';
 import agentService from '../services/agentService';
 
 interface Agent {
@@ -77,6 +78,7 @@ interface Agent {
   personality: string;
   description: string;
   avatar: string;
+  imageCid?: string; // IPFS CID for avatar image
   specializations: string[];
   capabilities: string[];
   performance: {
@@ -323,7 +325,14 @@ const AgentManagement: React.FC = () => {
             domain: agent.domain,
             personality: agent.personality,
             description: agent.description,
-            avatar: getAgentAvatar(agent.id || ''),
+            avatar: getAgentAvatar({
+              id: agent.id || '',
+              name: agent.name,
+              imageCid: agent.imageCid,
+              avatar: agent.avatar,
+              domain: agent.domain,
+              type: agent.type
+            }),
             specialization: agent.skills[0] || 'General',
             specializations: agent.skills,
             capabilities: agent.capabilities || [],
@@ -344,14 +353,28 @@ const AgentManagement: React.FC = () => {
     loadAgents();
   }, []);
 
-  // Helper function to get agent avatar
-  const getAgentAvatar = (agentId: string): string => {
-    const avatarMap: Record<string, string> = {
-      'agent-cfo': '/autonomous-cfo.png',
-      'agent-care': '/care-orchestrator.png',
-      'agent-crypto': '/crypto-alpha.png',
-    };
-    return avatarMap[agentId] || '/default-agent.png';
+  // Helper function to get agent avatar using unified system
+  const getAgentAvatar = (agent: Agent): string => {
+    return getAgentAvatarUrl({
+      id: agent.id,
+      name: agent.name,
+      imageCid: agent.imageCid,
+      avatar: agent.avatar,
+      domain: agent.domain,
+      type: agent.type
+    });
+  };
+
+  // Helper function to get agent emoji fallback
+  const getAgentEmojiFallback = (agent: Agent): string => {
+    return getAgentEmoji({
+      id: agent.id,
+      name: agent.name,
+      imageCid: agent.imageCid,
+      avatar: agent.avatar,
+      domain: agent.domain,
+      type: agent.type
+    });
   };
 
   // Helper function to get agent icon

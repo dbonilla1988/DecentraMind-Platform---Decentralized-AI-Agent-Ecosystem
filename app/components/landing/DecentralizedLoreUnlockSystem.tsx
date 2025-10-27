@@ -36,6 +36,7 @@ const DecentralizedLoreUnlockSystem = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedFragment, setSelectedFragment] = useState<LoreFragment | null>(null);
   const [hoveredFragment, setHoveredFragment] = useState<string | null>(null);
+  const [particles, setParticles] = useState<Array<{ left: number; top: number; duration: number; delay: number }>>([]);
   const [walletLore, setWalletLore] = useState<WalletLore>({
     walletAddress: '0x123...abc',
     fragmentsUnlocked: 3,
@@ -43,6 +44,21 @@ const DecentralizedLoreUnlockSystem = () => {
     uniqueFragments: ['fragment-001', 'fragment-003', 'fragment-007'],
     lastUnlock: Date.now() - 1000 * 60 * 60 * 2, // 2 hours ago
   });
+
+  useEffect(() => {
+    // Generate particle positions once on client side to avoid hydration mismatch
+    const generateParticles = () => {
+      const particleData = Array.from({ length: 20 }, () => ({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        duration: 3 + Math.random() * 2,
+        delay: Math.random() * 2,
+      }));
+      setParticles(particleData);
+    };
+
+    generateParticles();
+  }, []);
 
   // Mock lore fragments data
   const [fragments] = useState<LoreFragment[]>([
@@ -235,22 +251,22 @@ const DecentralizedLoreUnlockSystem = () => {
       <div className="absolute inset-0 perspective-1000">
         {/* Background Constellation */}
         <div className="absolute inset-0 opacity-20">
-          {[...Array(20)].map((_, i) => (
+          {particles.length > 0 && particles.map((particle, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-white rounded-full"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
               }}
               animate={{
                 opacity: [0.2, 0.8, 0.2],
                 scale: [1, 1.5, 1],
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: particle.duration,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: particle.delay,
               }}
             />
           ))}

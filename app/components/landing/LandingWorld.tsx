@@ -23,6 +23,7 @@ import MobileFloatingMenu from './MobileFloatingMenu';
 import MvpTourModal from './MvpTourModal';
 import DecentralizedFeaturesShowcase from './DecentralizedFeaturesShowcase';
 import WalletStatus from '../WalletStatus';
+import DecentraMindLogo from '../DecentraMindLogo';
 
 const LandingWorld = () => {
   return (
@@ -39,20 +40,7 @@ const LandingWorld = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <motion.div
-              className="flex items-center"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            >
-              <img 
-                src="/logo.svg" 
-                alt="DecentraMind Labs Logo" 
-                className="w-20 h-12 mr-3"
-              />
-              <span className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-                DecentraMind Labs
-              </span>
-            </motion.div>
+            <DecentraMindLogo size="lg" variant="text-only" animated={true} />
             
             <motion.div
               className="hidden md:flex items-center space-x-6"

@@ -4,7 +4,6 @@ import './globals.css';
 import { WalletProvider } from './providers/WalletProvider';
 import { ReduxProvider } from './providers/ReduxProvider';
 import { ToastProvider } from './components/ToastNotifications';
-// import { ThemeProvider } from './providers/ThemeProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -19,8 +18,8 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  title: 'DecentraMind',
-  description: 'Decentralized AI Marketplace',
+  title: 'DecentraMind Labs',
+  description: 'Decentralized AI Marketplace & Agent Ecosystem',
 };
 
 export default function RootLayout({
@@ -31,13 +30,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${orbitron.variable} dark`} suppressHydrationWarning>
       <body className="m-0 p-0 bg-zinc-900 text-white min-h-screen">
-                        <ReduxProvider>
-                    <WalletProvider>
-                      <ToastProvider>
-                      {children}
-                      </ToastProvider>
-                    </WalletProvider>
-                </ReduxProvider>
+        <ReduxProvider>
+          <WalletProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </WalletProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

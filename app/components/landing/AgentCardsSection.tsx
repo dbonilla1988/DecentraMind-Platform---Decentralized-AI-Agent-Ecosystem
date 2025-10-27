@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { getAgentAvatarUrl } from '@/utils/avatarUtils';
 
 interface AgentCardProps {
+  agentId: string;
   icon: string;
   name: string;
   description: string;
@@ -12,9 +14,10 @@ interface AgentCardProps {
   xpLevel: number;
   xpProgress: number;
   delay: number;
+  did?: string; // DID for Storacha gravatar
 }
 
-const AgentCard = ({ icon, name, description, price, features, xpLevel, xpProgress, delay }: AgentCardProps) => {
+const AgentCard = ({ agentId, icon, name, description, price, features, xpLevel, xpProgress, delay, did }: AgentCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -73,9 +76,9 @@ const AgentCard = ({ icon, name, description, price, features, xpLevel, xpProgre
         </div>
       </div>
 
-      {/* Agent Icon */}
+      {/* Agent Avatar */}
       <motion.div
-        className="text-8xl mb-6 group-hover:scale-110 transition-transform duration-500"
+        className="mb-6 group-hover:scale-110 transition-transform duration-500"
         whileHover={{ 
           rotate: [0, -10, 10, 0],
           scale: [1, 1.2, 1],
@@ -88,7 +91,17 @@ const AgentCard = ({ icon, name, description, price, features, xpLevel, xpProgre
           transition: 'all 0.3s ease',
         }}
       >
-        {icon}
+        <img
+          src={did ? `https://gravatar.storacha.network/avatar/${did}` : getAgentAvatarUrl({ id: agentId, name })}
+          alt={name}
+          className="w-20 h-20 rounded-full border-4 border-gradient shadow-md mb-2"
+          onError={(e) => {
+            // Fallback to existing avatar system if Storacha fails
+            if (did) {
+              e.currentTarget.src = getAgentAvatarUrl({ id: agentId, name });
+            }
+          }}
+        />
       </motion.div>
 
       {/* Agent Name */}
@@ -154,6 +167,7 @@ const AgentCard = ({ icon, name, description, price, features, xpLevel, xpProgre
 const AgentCardsSection = () => {
   const agents = [
     {
+      agentId: "agent-cfo",
       icon: "🧠",
       name: "Autonomous CFO",
       description: "Treasury, forecasting, governance integration, and token modeling.",
@@ -161,8 +175,10 @@ const AgentCardsSection = () => {
       features: ["Treasury Forecasting", "Token Modeling", "Governance Analysis", "Risk Assessment"],
       xpLevel: 85,
       xpProgress: 85,
+      did: "did:key:z6MknwpAmMmVTQMapEYEj5zyPhadGXRZ5KBfewN5JyYizmoC",
     },
     {
+      agentId: "agent-care",
       icon: "❤️",
       name: "Care Orchestrator",
       description: "Coordinates healthcare flows, provider dashboards, and HIPAA-compliant data access.",
@@ -170,8 +186,10 @@ const AgentCardsSection = () => {
       features: ["Health Monitoring", "Provider Coordination", "HIPAA Compliance", "Patient Analytics"],
       xpLevel: 92,
       xpProgress: 92,
+      did: "did:key:z6MkhM38Q4gRRYcCL4WH4CE77LaBg9biEDedTTHA32Vg1iAv",
     },
     {
+      agentId: "agent-crypto",
       icon: "📈",
       name: "Crypto Alpha Assistant",
       description: "Tracks alpha, evaluates protocols, and submits DAO voting proposals.",
@@ -179,6 +197,7 @@ const AgentCardsSection = () => {
       features: ["Alpha Tracking", "Protocol Analysis", "DAO Proposals", "Market Intelligence"],
       xpLevel: 78,
       xpProgress: 78,
+      did: "did:key:z6Mkf8Q4gRRYcCL4WH4CE77LaBg9biEDedTTHA32Vg1iAv",
     },
   ];
 
